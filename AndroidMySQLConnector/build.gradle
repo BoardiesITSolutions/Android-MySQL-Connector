@@ -32,19 +32,6 @@ android {
         abortOnError false
     }
 
-    android.libraryVariants
-
-    libraryVariants.all { variant ->
-        variant.outputs.all { output ->
-            def outputFile = output.outputFile
-            if (outputFile != null && outputFile.name.endsWith('.aar')) {
-                def fileName = "${archivesBaseName}-${version}.aar"
-                //output.outputFile = new File(outputFile.parent, fileName)
-                outputFileName = fileName
-            }
-        }
-    }
-
     repositories {
         mavenLocal()
         jcenter()
