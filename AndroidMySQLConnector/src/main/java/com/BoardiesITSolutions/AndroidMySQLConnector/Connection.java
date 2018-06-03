@@ -939,4 +939,29 @@ public class Connection
         }
         return data;
     }
+
+    public void close()
+    {
+        try
+        {
+            COM_Query com_query = new COM_Query(this, COM_Query.COM_QUIT, null);
+            final byte[] data = com_query.getPacketData().toByteArray();
+            SocketSender socketSender = new SocketSender(Connection.this, new IIntConnectionInterface() {
+                @Override
+                public void socketDataSent() {
+                    Log.d("MySQLConnection", "Database successfully closed");
+                }
+
+                @Override
+                public void handleException(MySQLConnException ex) {
+                    Log.e("MySQLConnection", ex.toString());
+                }
+            });
+            socketSender.execute(data);
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+    }
 }

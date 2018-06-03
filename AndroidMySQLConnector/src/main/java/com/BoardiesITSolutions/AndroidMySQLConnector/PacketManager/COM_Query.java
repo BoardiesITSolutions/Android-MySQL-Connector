@@ -50,7 +50,10 @@ public class COM_Query extends BasePacket
     private  void createPacket(int commandCode, String command) throws IOException
     {
         this.dataOutPacket.writeByte((byte)commandCode);
-        this.dataOutPacket.write((command).getBytes("UTF-8"));
+        if (command != null && commandCode != COM_QUIT)
+        {
+            this.dataOutPacket.write((command).getBytes("UTF-8"));
+        }
     }
 
     private boolean isComQuerySupported(int commandCode)
@@ -59,6 +62,7 @@ public class COM_Query extends BasePacket
         {
             case COM_QUERY:
             case COM_INIT_DB:
+            case COM_QUIT:
                 return true;
             default:
                 return false;

@@ -41,4 +41,18 @@ public class MySQLRow
         String value = this.getString(column);
         return Integer.parseInt(value);
     }
+
+    public float getFloat(String column) throws SQLColumnNotFoundException
+    {
+        String value = this.getString(column);
+        return Float.parseFloat(value);
+    }
+
+    public double getDouble(String column) throws SQLColumnNotFoundException
+    {
+        String value = this.getString(column);
+        return Double.parseDouble(value);
+    }
+
+
 }
