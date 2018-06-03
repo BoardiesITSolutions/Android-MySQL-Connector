@@ -55,10 +55,10 @@ or constructor will take an interface which will get called once the action has 
 ## Connecting to a MySQL Server
 To connect to a MySQL server you first need to create the MySQL Connection object. You can do this as follows:
 ```
-Connection  mysqlConnection = new Connection("&lt;Hostname&gt;", "&lt;Username&gt;", "&lt;Password&gt;", &lt;Port&gt;, "&lt;Database&gt;", new IConnectionInterface()
+Connection  mysqlConnection = new Connection("<Hostname>", "<Username>", "<Password>", <Port>, "<Database>", new IConnectionInterface()
 ```
 
-In the above example, &lt;database&gt; is an optional parameter. By setting this, when the connection is established, the database name will be the default
+In the above example, <database> is an optional parameter. By setting this, when the connection is established, the database name will be the default
 database used. The IConnectionInterface parameter handles connection specific events, such as successfully connected or exception handlers.
 
 For example, when creating a new IConnectionInterface, you will need to provide the following methods:
@@ -88,7 +88,7 @@ your connection object available in your class as this will be required in order
 
 ## Switching Database
 You can change the default database to use in your established MySQL Connection. To do this, do not execute
-a standard USE DATABASE &lt;db&gt; query as it won't work.
+a standard USE DATABASE <db> query as it won't work.
 
 You need to use your connection object and call the method `switchDatabase(db, new IConnectionInterface())`.
 `db` being a String of your database name, and again, pass in the IConnectionInterface. If it switched successfully
@@ -135,10 +135,10 @@ This result set object contains all the information about what was returned such
 To get the total number of rows you can call `resultset.getNumRows();`.
 
 ## Get column definitions
-The column definitions are stored in a `List&lt;ColumnDefinition&gt;`. You can get this using the following code snipper:
+The column definitions are stored in a `List<ColumnDefinition>`. You can get this using the following code snipper:
 
 ```
-List&lt;ColumnDefinition&gt; columns = result.getFields();
+List<ColumnDefinition> columns = result.getFields();
 ```
 
 You can then loop over the list to get ColumnDefinition for each column returned in the result set. Within the column
