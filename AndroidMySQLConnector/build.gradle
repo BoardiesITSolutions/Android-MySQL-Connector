@@ -1,7 +1,4 @@
 buildscript {
-    repositories {
-        mavenLocal()
-    }
 }
 
 apply plugin: 'com.android.library'
