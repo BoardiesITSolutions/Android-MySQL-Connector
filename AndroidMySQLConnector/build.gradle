@@ -5,7 +5,7 @@ buildscript {
 }
 
 apply plugin: 'com.android.library'
-apply plugin: 'maven-publish'
+apply plugin: 'com.github.dcendents.android-maven'
 
 archivesBaseName="AndroidMySQLConnector"
 version '0.22'
