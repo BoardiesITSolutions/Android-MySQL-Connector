@@ -136,9 +136,11 @@ To get the total number of rows you can call `resultset.getNumRows();`.
 
 ## Get column definitions
 The column definitions are stored in a `List&lt;ColumnDefinition&gt;`. You can get this using the following code snipper:
+
 '''
 List&lt;ColumnDefinition&gt; columns = result.getFields();
 '''
+
 You can then loop over the list to get ColumnDefinition for each column returned in the result set. Within the column
 definition class, you can use the following methods:
 **getDatabase**
@@ -160,6 +162,7 @@ Returns a boolean as to whether or not the column is a primary key
 You can iterate through each row, you first need to create an empty `MySQLRow` variable that can be used
 to be set within a while loop to get each row. You can call `getNextRow()` on the result set to get a MySQLRow.
 Once there are no rows left, null is returned. The following code snippet provides an example:
+
 '''
 MySQLRow row;
 while ((row = result.getNextRow()) != null)
@@ -178,6 +181,7 @@ Each of the following methods, take a String parameter which is the column name 
 # Escaping Strings
 When sending dynamic paraters in your MySQL query, the string should be escaped to avoid SQL injection attacks.
 This can be done by using the following code snippet:
+
 '''
 String var = connection.escape_string(variable);
 '''
