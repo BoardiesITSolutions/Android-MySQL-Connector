@@ -32,7 +32,7 @@ MeriaDB and MySQL version should be compatible and therefore should work in the 
 
 # Adding Dependency
 Adding the library to your project couldn't be simpler. Add the following to your apps build.gradle
-'''
+```
     repositories {
         maven { url 'https://jitpack.io' }
     }
@@ -40,7 +40,7 @@ Adding the library to your project couldn't be simpler. Add the following to you
     dependencies {
         implementation 'com.github.BoardiesITSolutions:Android-MySQL-Connector:TAG'
     }
-'''
+```
 
 The `TAG` above will be the tagged version number of the library.
 
@@ -54,9 +54,9 @@ or constructor will take an interface which will get called once the action has 
 
 ## Connecting to a MySQL Server
 To connect to a MySQL server you first need to create the MySQL Connection object. You can do this as follows:
-'''
+```
 Connection  mysqlConnection = new Connection("&lt;Hostname&gt;", "&lt;Username&gt;", "&lt;Password&gt;", &lt;Port&gt;, "&lt;Database&gt;", new IConnectionInterface()
-'''
+```
 
 In the above example, &lt;database&gt; is an optional parameter. By setting this, when the connection is established, the database name will be the default
 database used. The IConnectionInterface parameter handles connection specific events, such as successfully connected or exception handlers.
@@ -97,14 +97,14 @@ you will receive a call back to the actionCompleted method.
 ## Execute Statement (Such as INSERT or UPDATE where no resultset is returned)
 First of all you need to create a statement object from your connection object.
 You can do this using the following code snippet
-'''
+```
 Statement statement = connection.createStatement();
-'''
+```
 
 Then in order to execute your statement you then do the following
-'''
+```
 statement.execute(query, new IConnectionInterface());
-'''
+```
 
 `query` is your statement that you want to execute such as an INSERT or UPDATE statement. Again the second
 parameter is the IConnectionInterface and if the statement execute successfully, then actionCompleted will be called.
@@ -113,15 +113,15 @@ parameter is the IConnectionInterface and if the statement execute successfully,
 The execute query function allows you to execute a query such as SELECT or DESCRIBE, basically any query
 which return a result set. Same with executing a statement, you need to create the statement object from your
 connection object. This can be done using the following code snippet:
-'''
+```
 Statement statement = connection.createStatement();
-'''
+```
 
 Then you need to call the executeQuery withn your statement object, but this time passing in a new
 IResultInterface as shown below:
-'''
+```
 statement.executeQuery(query, new IResultInterface());
-'''
+```
 
 The IResultInterface is pretty similar to the IConnectionInterface, you'll have the same exception handlers,
 the main difference that if the query executes successfully, you'll receive executionComplete which will have
@@ -137,9 +137,9 @@ To get the total number of rows you can call `resultset.getNumRows();`.
 ## Get column definitions
 The column definitions are stored in a `List&lt;ColumnDefinition&gt;`. You can get this using the following code snipper:
 
-'''
+```
 List&lt;ColumnDefinition&gt; columns = result.getFields();
-'''
+```
 
 You can then loop over the list to get ColumnDefinition for each column returned in the result set. Within the column
 definition class, you can use the following methods:
@@ -163,13 +163,13 @@ You can iterate through each row, you first need to create an empty `MySQLRow` v
 to be set within a while loop to get each row. You can call `getNextRow()` on the result set to get a MySQLRow.
 Once there are no rows left, null is returned. The following code snippet provides an example:
 
-'''
+```
 MySQLRow row;
 while ((row = result.getNextRow()) != null)
 {
    //Read the row contents here
 }
-'''
+```
 
 Once you have your MySQLRow you can then call the following methods to return the value of the field.
 Each of the following methods, take a String parameter which is the column name that should be retrieved.
@@ -182,9 +182,9 @@ Each of the following methods, take a String parameter which is the column name 
 When sending dynamic paraters in your MySQL query, the string should be escaped to avoid SQL injection attacks.
 This can be done by using the following code snippet:
 
-'''
+```
 String var = connection.escape_string(variable);
-'''
+```
 
 # Best Practices
 Currently the connection object can't be passed between Android activities, so if you do need to create a new Activity
