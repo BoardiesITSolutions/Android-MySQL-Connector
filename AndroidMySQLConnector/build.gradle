@@ -1,12 +1,28 @@
+
+
 buildscript {
+    repositories {
+        if (rootProject.ext.publishToMavenLocal) {
+
+            mavenLocal()
+        }
+    }
 }
 
 apply plugin: 'com.android.library'
-apply plugin: 'com.github.dcendents.android-maven'
+if (rootProject.ext.publishToMavenLocal)
+{
+    apply plugin: 'maven-publish'
+}
+else
+{
+    apply plugin: 'com.github.dcendents.android-maven'
+}
 
 archivesBaseName="AndroidMySQLConnector"
-version '0.22'
+version '0.23'
 group 'com.BoardiesITSolutions'
+
 
 android {
     compileSdkVersion 27
@@ -14,8 +30,8 @@ android {
         //applicationId "com.BoardiesITSolutions.AndroidMySQLConnector"
         minSdkVersion 19
         targetSdkVersion 27
-        versionCode 8
-        versionName "0.22"
+        versionCode 9
+        versionName "0.23"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -29,13 +45,45 @@ android {
         abortOnError false
     }
 
+
+    if (rootProject.ext.publishToMavenLocal) {
+        android.libraryVariants
+
+        publishing {
+            publications {
+                maven(MavenPublication)
+                        {
+                            artifact getArtifactFullPath()
+                        }
+            }
+        }
+
+        libraryVariants.all { variant ->
+            variant.outputs.all { output ->
+                def outputFile = output.outputFile
+                if (outputFile != null && outputFile.name.endsWith('.aar')) {
+                    def fileName = "${archivesBaseName}-${version}.aar"
+                    //output.outputFile = new File(outputFile.parent, fileName)
+                    outputFileName = fileName
+                }
+            }
+        }
+    }
+
     repositories {
-        mavenLocal()
+        if (rootProject.ext.publishToMavenLocal)
+        {
+            mavenLocal()
+        }
         jcenter()
         maven {
             url "https://maven.google.com"
         }
     }
+}
+
+def getArtifactFullPath() {
+    return ".//build/outputs/aar/${archivesBaseName}-${project.version}.aar"
 }
 
 dependencies {
