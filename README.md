@@ -1,3 +1,8 @@
+[![](https://jitpack.io/v/BoardiesITSolutions/Android-MySQL-Connector.svg)](https://jitpack.io/#BoardiesITSolutions/Android-MySQL-Connector)
+<a href="https://ci.boardiesitsolutions.com/viewType.html?buildTypeId=AndroidMySQLConnector_Build&guest=1">
+<img src="https://ci.boardiesitsolutions.com/app/rest/builds/buildType:(id:AndroidMySQLConnector_Build)/statusIcon"/>
+</a>
+
 # Introduction
 This is (as far as we are aware) the first and only native MySQL connector for Android.
 It connects directly to your database instead of relying on some sort of web service to
