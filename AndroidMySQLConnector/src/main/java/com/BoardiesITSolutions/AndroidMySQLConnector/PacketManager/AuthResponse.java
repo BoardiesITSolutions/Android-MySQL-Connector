@@ -96,7 +96,7 @@ public class AuthResponse extends BasePacket
                         String authSalt2 = this.mysqlConn.getAuthSalt2();
                         String seed = this.mysqlConn.getAuthSalt() + this.mysqlConn.getAuthSalt2();
                         //String updateSeed = this.seed.substring(0, 20);
-                        byte[] bytes = seed.getBytes(Charset.forName("UTF-8"));
+                        byte[] bytes = seed.getBytes(charset);
                         String temp = readString(bytes);
                         byte[] password = scramblePassword(this.mysqlConn.getPassword(), temp);
 
@@ -111,9 +111,13 @@ public class AuthResponse extends BasePacket
                         //any error either we receive an EOF packet but running show processlist from the server itself
                         //shows unauthenticated user. Therefore, if we're not connecting to a default database
                         //add the null terminator to the password, if we are using a default database don't add the null terminator
+                        //but this also only appears to be required on certain MySQL Versions.
                         if ((this.mysqlConn.getDatabase() == null) || this.mysqlConn.getDatabase().length() == 0)
                         {
-                            dataOutPacket.writeByte(0); //Write the null terminator
+                            if (!mysqlConn.getServerVersion().startsWith("5.7"))
+                            {
+                                dataOutPacket.writeByte(0); //Write the null terminator
+                            }
                         }
 
                     }
