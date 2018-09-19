@@ -334,8 +334,9 @@ Statement statement = mysqlConnection.createStatement();
             
 ## Executing query (Statement which returns a MySQL Result Set, e.g. SELECT, SHOW, DESCRIBE)
 Performing a query to return a result set is pretty much the same as above, the only difference is that instead of passing an `IConnectionInterface`, you instead pass an `IResultInterface()` and the `executionComplete` method provides you with a `ResultSet` object
+
 ```
-Statement statement = mysqlConnection.createStatement();
+    Statement statement = mysqlConnection.createStatement();
         statement.executeQuery("SELECT * FROM my_table", new IResultInterface()
         {
             @Override
