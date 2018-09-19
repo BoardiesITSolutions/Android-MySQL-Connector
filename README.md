@@ -200,3 +200,188 @@ Also, to avoid leaving the DB connection open for no reason, in your activities 
 you should close the DB connection and then create a new instance to restablish the connection in the onCreate and/or onResume
 
 You can close the DB by calling `connection.close()`.
+
+# Examples
+Below you will find some examples on some of the common actions you might do with the MySQL Connector. 
+
+Each of the below examples creates a Connection object called mysqlConnection. This can be done using the following:
+```
+mysqlConnection = new Connection("localhost", "root",
+                    "letmein", 3306, "my_database", new IConnectionInterface()
+            {
+                @Override
+                public void actionCompleted()
+                {
+                    //You are now connected to the database
+                }
+
+                @Override
+                public void handleInvalidSQLPacketException(InvalidSQLPacketException e)
+                {
+                    //Handle the error
+                }
+
+                @Override
+                public void handleMySQLException(MySQLException e)
+                {
+                    //Handle the error
+                }
+
+                @Override
+                public void handleIOException(IOException e)
+                {
+                    //Handle the error
+                }
+
+                @Override
+                public void handleMySQLConnException(MySQLConnException e)
+                {
+                    //Handle the error
+                }
+
+                @Override
+                public void handleException(Exception e)
+                {
+                    //Handle the error
+                }
+            });
+            //The below line isn't required, however, the MySQL action, whether connecting or executing a statement
+            //(basically anything that uses the this connection object) does its action in a thread, so the call
+            //back you receive will still be in its thread. If you are performing a GUI operation in your callback you need to 
+            //switch the main thread. You can either do this yourself when required, or pass true as the first parameter 
+            //so that when you receive the call back it is already switched to the main thread
+            mysqlConnection.returnCallbackToMainThread(true, MainActivity.this);
+```
+
+## Switching Default Database
+When you need to change the default database, (if a default database is set you do not need to prepend the database with the table name). You cannot use the the statement `USE new_database`, you have to use the method `switchDatabase` within the connection object as follows:
+```
+mysqlConnection.switchDatabase("your_db_name", new IConnectionInterface() {
+            @Override
+            public void actionCompleted() {
+                //Database switched successfully
+            }
+
+            @Override
+            public void handleInvalidSQLPacketException(InvalidSQLPacketException e) {
+                errorHandler.handleInvalidSQLPacketException(e);
+            }
+
+            @Override
+            public void handleMySQLException(MySQLException e) {
+                errorHandler.handleMySQLException(e);
+            }
+
+            @Override
+            public void handleIOException(IOException e) {
+                errorHandler.handleIOException(e);
+            }
+
+            @Override
+            public void handleMySQLConnException(MySQLConnException e) {
+                errorHandler.handleMySQLConnException(e);
+            }
+
+            @Override
+            public void handleException(Exception e) {
+                errorHandler.handleGeneralException(e);
+            }
+        });
+```
+
+## Executing statement (SQL statements that do not return a result set, e.g. INSERT, UPDATE, DELETE, TRUNCATE, CREATE, DROP ALTER)
+Statement statement = mysqlConnection.createStatement();
+            statement.execute("CREATE DATABASE my_new_db", new IConnectionInterface()
+            {
+                @Override
+                public void actionCompleted()
+                {
+                    //action completed successfully
+                }
+
+                @Override
+                public void handleInvalidSQLPacketException(InvalidSQLPacketException e)
+                {
+                    errorHandler.handleInvalidSQLPacketException(e);
+                }
+
+                @Override
+                public void handleMySQLException(MySQLException e)
+                {
+                    errorHandler.handleMySQLException(e);
+                }
+
+                @Override
+                public void handleIOException(IOException e)
+                {
+                    errorHandler.handleIOException(e);
+                }
+
+                @Override
+                public void handleMySQLConnException(MySQLConnException e)
+                {
+                    errorHandler.handleMySQLConnException(e);
+                }
+
+                @Override
+                public void handleException(Exception e)
+                {
+                    errorHandler.handleGeneralException(e);
+                }
+            });
+            
+## Executing query (Statement which returns a MySQL Result Set, e.g. SELECT, SHOW, DESCRIBE)
+Performing a query to return a result set is pretty much the same as above, the only difference is that instead of passing an `IConnectionInterface`, you instead pass an `IResultInterface()` and the `executionComplete` method provides you with a `ResultSet` object
+```
+Statement statement = mysqlConnection.createStatement();
+        statement.executeQuery("SELECT * FROM my_table", new IResultInterface()
+        {
+            @Override
+            public void executionComplete(ResultSet resultSet)
+            {
+                addHistoryRecord(new QueryHistory(QueryHistory.Status.OK, txtQuery.getText().toString(), "Fetched " + resultSet.getNumRows() + " Row(s)", statement.getQueryTimeInMilliseconds()));
+                processResultset(resultSet);
+            }
+
+            @Override
+            public void handleInvalidSQLPacketException(InvalidSQLPacketException e)
+            {
+                Log.e("DBViewFragment", e.toString());
+                addHistoryRecord(new QueryHistory(QueryHistory.Status.ERROR, txtQuery.getText().toString(), e.toString(), statement.getQueryTimeInMilliseconds()));
+                errorHandler.handleInvalidSQLPacketException(e);
+
+            }
+
+            @Override
+            public void handleMySQLException(MySQLException e)
+            {
+                Log.e("DBViewFragement", e.toString());
+                addHistoryRecord(new QueryHistory(QueryHistory.Status.ERROR, txtQuery.getText().toString(), e.toString(), statement.getQueryTimeInMilliseconds()));
+                errorHandler.handleMySQLException(e);
+            }
+
+            @Override
+            public void handleIOException(IOException e)
+            {
+                Log.e("DBViewFragement",e.toString());
+                addHistoryRecord(new QueryHistory(QueryHistory.Status.ERROR, txtQuery.getText().toString(), e.toString(), statement.getQueryTimeInMilliseconds()));
+                errorHandler.handleIOException(e);
+            }
+
+            @Override
+            public void handleMySQLConnException(MySQLConnException e)
+            {
+                Log.e("DBViewFragement", e.toString());
+                addHistoryRecord(new QueryHistory(QueryHistory.Status.ERROR, txtQuery.getText().toString(), e.toString(), statement.getQueryTimeInMilliseconds()));
+                errorHandler.handleMySQLConnException(e);
+            }
+
+            @Override
+            public void handleException(Exception e)
+            {
+                Log.e("DBViewFragement", e.toString());
+                addHistoryRecord(new QueryHistory(QueryHistory.Status.ERROR, txtQuery.getText().toString(), e.toString(), statement.getQueryTimeInMilliseconds()));
+                errorHandler.handleGeneralException(e);
+            }
+        });
+```
