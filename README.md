@@ -206,7 +206,7 @@ Below you will find some examples on some of the common actions you might do wit
 
 Each of the below examples creates a Connection object called mysqlConnection. This can be done using the following:
 ```
-mysqlConnection = new Connection("localhost", "root",
+Connection mysqlConnection = new Connection("localhost", "root",
                     "letmein", 3306, "my_database", new IConnectionInterface()
             {
                 @Override
@@ -255,6 +255,7 @@ mysqlConnection = new Connection("localhost", "root",
 
 ## Switching Default Database
 When you need to change the default database, (if a default database is set you do not need to prepend the database with the table name). You cannot use the the statement `USE new_database`, you have to use the method `switchDatabase` within the connection object as follows:
+
 ```
 mysqlConnection.switchDatabase("your_db_name", new IConnectionInterface() {
             @Override
@@ -290,6 +291,7 @@ mysqlConnection.switchDatabase("your_db_name", new IConnectionInterface() {
 ```
 
 ## Executing statement (SQL statements that do not return a result set, e.g. INSERT, UPDATE, DELETE, TRUNCATE, CREATE, DROP ALTER)
+```
 Statement statement = mysqlConnection.createStatement();
             statement.execute("CREATE DATABASE my_new_db", new IConnectionInterface()
             {
