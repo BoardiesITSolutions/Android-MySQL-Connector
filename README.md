@@ -388,3 +388,15 @@ Performing a query to return a result set is pretty much the same as above, the 
             }
         });
 ```
+
+## Troubleshooting
+If you have added the library and the gradle sync works successfully but you are getting errors like `cannot resolve symbol` make sure that the imports at the top of the class file have been referenced. 
+
+This can be done in one of two ways:
+1. Put the cursor somewhere in the area of code which is showing red and hit Ctrl + Alt + Enter. Android Studio will provide tips on how to fix - one of them being to import the class. Select import and the error should go away. 
+2. You can add the following two lines:
+```
+import com.BoardiesITSolutions.AndroidMySQLConnector.*;
+import com.BoardiesITSolutions.AndroidMySQLConnector.Exceptions.*;
+```
+which will import all available classes from the library. However, this tends to be bad practice as only what's needed from the library by your class should be imported. You can get round this by adding the two lines above, then when your class is finished, you can then do Ctrl + Alt + O which will organise your imports into what ones are required instead of a wildcard import. 
