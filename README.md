@@ -390,7 +390,7 @@ Performing a query to return a result set is pretty much the same as above, the 
 ```
 
 ## Troubleshooting
-### Cannot Resolve Symbold Error
+### Cannot Resolve Symbol Error
 If you have added the library and the gradle sync works successfully but you are getting errors like `cannot resolve symbol` make sure that the imports at the top of the class file have been referenced. 
 
 This can be done in one of two ways:
