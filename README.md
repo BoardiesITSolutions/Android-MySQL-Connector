@@ -390,6 +390,7 @@ Performing a query to return a result set is pretty much the same as above, the 
 ```
 
 ## Troubleshooting
+### Cannot Resolve Symbold Error
 If you have added the library and the gradle sync works successfully but you are getting errors like `cannot resolve symbol` make sure that the imports at the top of the class file have been referenced. 
 
 This can be done in one of two ways:
@@ -400,3 +401,15 @@ import com.BoardiesITSolutions.AndroidMySQLConnector.*;
 import com.BoardiesITSolutions.AndroidMySQLConnector.Exceptions.*;
 ```
 which will import all available classes from the library. However, this tends to be bad practice as only what's needed from the library by your class should be imported. You can get round this by adding the two lines above, then when your class is finished, you can then do Ctrl + Alt + O which will organise your imports into what ones are required instead of a wildcard import. 
+
+### javax.net.ssl.SSLHandshakeException: Handshake failed
+If you see this error then connect to your DB via command line and run the following query:
+```
+SHOW SESSION STATUS LIKE 'Ssl_version';
+```
+
+If it shows TLSv1 then this won't be supported by the Android MySQL Connector library. TLS 1.0 is a deprecated version of TLS and Java and/or Android no longer supports this TLS version. 
+
+If MySQL supports it, you can add `tls_version=TLSv1.1` or `tls_version=TLSv1.2` (Check your mysql version documentation to determine the supported TLS) to your `/etc/main.cf` file and restart MySQL. 
+
+If you are using Amazon RDS then you will need to use at least MySQL 5.7.16. Previous version of Amazon RDS for MySQL only support TLS 1.0 so the library won't be able to connect. 
