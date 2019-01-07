@@ -410,6 +410,6 @@ SHOW SESSION STATUS LIKE 'Ssl_version';
 
 If it shows TLSv1 then this won't be supported by the Android MySQL Connector library. TLS 1.0 is a deprecated version of TLS and Java and/or Android no longer supports this TLS version. 
 
-If MySQL supports it, you can add `tls_version=TLSv1.1` or `tls_version=TLSv1.2` (Check your mysql version documentation to determine the supported TLS) to your `/etc/main.cf` file and restart MySQL. 
+If MySQL supports it, you can add `tls_version=TLSv1.1` or `tls_version=TLSv1.2` (Check your mysql version documentation to determine the supported TLS) to your `/etc/main.cf` file and restart MySQL. This needs to be added under the `mysqld` section of the config file.
 
 If you are using Amazon RDS then you will need to use at least MySQL 5.7.16. Previous version of Amazon RDS for MySQL only support TLS 1.0 so the library won't be able to connect. 
