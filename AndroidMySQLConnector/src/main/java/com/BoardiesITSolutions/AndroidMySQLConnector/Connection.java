@@ -773,6 +773,7 @@ public class Connection
 
     private void parseVersionNumber()
     {
+        this.serverVersion = this.serverVersion.substring(0, this.serverVersion.indexOf("-")-1);
         this.serverVersion = this.serverVersion.replaceAll("[^\\d.]", "");
         if ((this.serverVersion != null) && this.serverVersion.length() > 0)
         {
