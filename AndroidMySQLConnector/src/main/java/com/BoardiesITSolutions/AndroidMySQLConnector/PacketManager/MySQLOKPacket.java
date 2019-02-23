@@ -1,6 +1,5 @@
 package com.BoardiesITSolutions.AndroidMySQLConnector.PacketManager;
 
-import android.support.v7.widget.ThemedSpinnerAdapter;
 import android.util.Log;
 
 import com.BoardiesITSolutions.AndroidMySQLConnector.Connection;
@@ -33,8 +32,8 @@ public class MySQLOKPacket extends BasePacket
 
     private void processPacket() throws IOException, InvalidSQLPacketException
     {
-        this.setPacketLength(this.mysqlConn.getMysqlIO().fromByteArray((byte[]) this.mysqlConn.getMysqlIO().extractData(3)));
-        this.setPacketSequenceNumber((byte)this.mysqlConn.getMysqlIO().extractData(1));
+        this.setPacketLength(this.mysqlConn.getMysqlIO().fromByteArray((byte[]) this.mysqlConn.getMysqlIO().extractDataAsString(3)));
+        this.setPacketSequenceNumber((byte)this.mysqlConn.getMysqlIO().extractDataAsString(1));
 
 
         Helpers.MYSQL_PACKET_TYPE packetType = Helpers.getMySQLPacketType(this.mysqlConn.getMysqlIO().getSocketByteArray());
@@ -57,9 +56,9 @@ public class MySQLOKPacket extends BasePacket
         int warningsCount = 0;
         if ((this.mysqlConn.getServerCapabilities() & Connection.CLIENT_PROTOCOL_41) == Connection.CLIENT_PROTOCOL_41)
         {
-            statusFlags = this.mysqlConn.getMysqlIO().fromByteArray((byte[])this.mysqlConn.getMysqlIO().extractData(2));
+            statusFlags = this.mysqlConn.getMysqlIO().fromByteArray((byte[])this.mysqlConn.getMysqlIO().extractDataAsString(2));
 
-            warningsCount = this.mysqlConn.getMysqlIO().fromByteArray((byte[])this.mysqlConn.getMysqlIO().extractData(2));
+            warningsCount = this.mysqlConn.getMysqlIO().fromByteArray((byte[])this.mysqlConn.getMysqlIO().extractDataAsString(2));
         }
 
         Log.d("MySQLOKPacket", "Affected Rows: " + affectedRows);

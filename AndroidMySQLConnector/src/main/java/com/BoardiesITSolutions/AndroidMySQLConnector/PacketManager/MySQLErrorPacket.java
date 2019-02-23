@@ -39,9 +39,9 @@ public class MySQLErrorPacket extends BasePacket
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     private void processPacket() throws IOException, InvalidSQLPacketException
     {
-        this.setPacketLength(this.mysqlConn.getMysqlIO().fromByteArray((byte[]) this.mysqlConn.getMysqlIO().extractData(3)));
+        this.setPacketLength(this.mysqlConn.getMysqlIO().fromByteArray((byte[]) this.mysqlConn.getMysqlIO().extractDataAsString(3)));
 
-        this.setPacketSequenceNumber((byte)this.mysqlConn.getMysqlIO().extractData(1));
+        this.setPacketSequenceNumber((byte)this.mysqlConn.getMysqlIO().extractDataAsString(1));
 
 
         if (Helpers.getMySQLPacketType(this.mysqlConn.getMysqlIO().getSocketByteArray()) != Helpers.MYSQL_PACKET_TYPE.MYSQL_ERROR_PACKET) {
@@ -50,17 +50,17 @@ public class MySQLErrorPacket extends BasePacket
 
         //Shift one is this the packet type header - this is checked above but the check doesn't shift the  byte position
         this.mysqlConn.getMysqlIO().shiftCurrentBytePosition(1);
-        byte[] errorCodeArray = (byte[]) this.mysqlConn.getMysqlIO().extractData(2);
+        byte[] errorCodeArray = (byte[]) this.mysqlConn.getMysqlIO().extractDataAsString(2);
         errorCodeArray = this.mysqlConn.getMysqlIO().swapByteArray(errorCodeArray);
         this.errorCode = (this.mysqlConn.getMysqlIO().fromByteArray(errorCodeArray) << 8);
 
-        byte sqlStateSplitter = (byte) this.mysqlConn.getMysqlIO().extractData(1);
+        byte sqlStateSplitter = (byte) this.mysqlConn.getMysqlIO().extractDataAsString(1);
         if ((sqlStateSplitter & 0xff) == 0x23) {
             //We'll have the SQL state here
-            byte[] sqlStateArray = (byte[]) this.mysqlConn.getMysqlIO().extractData(5);
+            byte[] sqlStateArray = (byte[]) this.mysqlConn.getMysqlIO().extractDataAsString(5);
             this.sqlState = (this.mysqlConn.getMysqlIO().fromByteArray(sqlStateArray) << 8);
         }
-        this.errorMsg = this.mysqlConn.getMysqlIO().extractData(false);
+        this.errorMsg = this.mysqlConn.getMysqlIO().extractDataAsString(false);
     }
 
     /**

@@ -182,6 +182,7 @@ Each of the following methods, take a String parameter which is the column name 
 * getInt(String column)
 * getFloat(String column)
 * getDouble(String column)
+* getBlob(String column) (Returns a byte[] array)
 
 # Escaping Strings
 When sending dynamic paraters in your MySQL query, the string should be escaped to avoid SQL injection attacks.

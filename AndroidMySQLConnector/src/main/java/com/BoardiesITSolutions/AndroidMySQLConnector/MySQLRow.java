@@ -8,14 +8,14 @@ import java.util.Set;
 
 public class MySQLRow
 {
-    private HashMap<ColumnDefinition, String> columnAndRowValue;
+    private HashMap<ColumnDefinition, Object> columnAndRowValue;
 
     public MySQLRow()
     {
         this.columnAndRowValue = new HashMap<>();
     }
 
-    public void addRowValue(ColumnDefinition columnDefinition, String rowValue)
+    public void addRowValue(ColumnDefinition columnDefinition, Object rowValue)
     {
         this.columnAndRowValue.put(columnDefinition, rowValue);
     }
@@ -54,5 +54,19 @@ public class MySQLRow
         return Double.parseDouble(value);
     }
 
-
+    public byte[] getBlob(String column) throws SQLColumnNotFoundException
+    {
+        Set set = this.columnAndRowValue.entrySet();
+        Iterator iterator = set.iterator();
+        while (iterator.hasNext())
+        {
+            Map.Entry entry = (Map.Entry)iterator.next();
+            ColumnDefinition col = (ColumnDefinition)entry.getKey();
+            if (col.getColumnName().equals(column))
+            {
+                return (byte[])entry.getValue();
+            }
+        }
+        throw new SQLColumnNotFoundException("'"+column+"' was not found in result set");
+    }
 }

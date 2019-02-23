@@ -1,5 +1,7 @@
 package com.BoardiesITSolutions.AndroidMySQLConnector.PacketManager;
 
+import android.util.Log;
+
 import com.BoardiesITSolutions.AndroidMySQLConnector.ColumnDefinition;
 import com.BoardiesITSolutions.AndroidMySQLConnector.Connection;
 import com.BoardiesITSolutions.AndroidMySQLConnector.Helpers;
@@ -25,44 +27,56 @@ public class COM_QueryResponse extends BasePacket
 
     private void processPacketData()
     {
-        this.setPacketLength(this.mysqlConn.getMysqlIO().fromByteArray((byte[]) this.mysqlConn.getMysqlIO().extractData(3)));
-        this.setPacketSequenceNumber((byte)this.mysqlConn.getMysqlIO().extractData(1));
+        this.setPacketLength(this.mysqlConn.getMysqlIO().fromByteArray((byte[]) this.mysqlConn.getMysqlIO().extractDataAsString(3)));
+        this.setPacketSequenceNumber((byte)this.mysqlConn.getMysqlIO().extractDataAsString(1));
 
-        int numberOfFields = (byte)this.mysqlConn.getMysqlIO().extractData(1);
+        int numberOfFields = (byte)this.mysqlConn.getMysqlIO().extractDataAsString(1);
 
         for (int currentColumnCount = 0; currentColumnCount < numberOfFields; currentColumnCount++)
         {
             this.mysqlConn.getMysqlIO().shiftCurrentBytePosition(4);
 
             int catalogLength = (byte)this.mysqlConn.getMysqlIO().getLenEncodedInt();
-            String catalog = this.mysqlConn.getMysqlIO().extractData(false, catalogLength);
+            String catalog = this.mysqlConn.getMysqlIO().extractDataAsString(false, catalogLength);
 
             int databaseLength = (byte)this.mysqlConn.getMysqlIO().getLenEncodedInt();
-            String database = this.mysqlConn.getMysqlIO().extractData(false, databaseLength);
+            String database = this.mysqlConn.getMysqlIO().extractDataAsString(false, databaseLength);
 
             int tableLength = (byte)this.mysqlConn.getMysqlIO().getLenEncodedInt();
-            String table = this.mysqlConn.getMysqlIO().extractData(false, tableLength);
+            String table = this.mysqlConn.getMysqlIO().extractDataAsString(false, tableLength);
 
             int origTableLength = (byte)this.mysqlConn.getMysqlIO().getLenEncodedInt();
-            String origTable = this.mysqlConn.getMysqlIO().extractData(false, origTableLength);
+            String origTable = this.mysqlConn.getMysqlIO().extractDataAsString(false, origTableLength);
 
             int columnNameLength = (byte)this.mysqlConn.getMysqlIO().getLenEncodedInt();
-            String columnName = this.mysqlConn.getMysqlIO().extractData(false, columnNameLength);
+            String columnName = this.mysqlConn.getMysqlIO().extractDataAsString(false, columnNameLength);
 
             int origColumnNameLength = (byte)this.mysqlConn.getMysqlIO().getLenEncodedInt();
-            String origColumnName = this.mysqlConn.getMysqlIO().extractData(false, origColumnNameLength);
+            String origColumnName = this.mysqlConn.getMysqlIO().extractDataAsString(false, origColumnNameLength);
 
             int nextLength = (byte)this.mysqlConn.getMysqlIO().getLenEncodedInt();
 
-            int characterSet = this.mysqlConn.getMysqlIO().fromByteArray((byte[])this.mysqlConn.getMysqlIO().extractData(2));
+            int characterSet = this.mysqlConn.getMysqlIO().fromByteArray((byte[])this.mysqlConn.getMysqlIO().extractDataAsString(2));
 
-            int columnLength = this.mysqlConn.getMysqlIO().fromByteArray((byte[])this.mysqlConn.getMysqlIO().extractData(4));
 
-            int columnType = (byte)this.mysqlConn.getMysqlIO().extractData(1);
+            //int columnLength = this.mysqlConn.getMysqlIO().fromByteArray((byte[])this.mysqlConn.getMysqlIO().extractDataAsString(4));
 
-            int flags = this.mysqlConn.getMysqlIO().fromByteArray((byte[])this.mysqlConn.getMysqlIO().extractData(2));
+            this.mysqlConn.getMysqlIO().shiftCurrentBytePosition(4);
 
-            int decimals = (byte)this.mysqlConn.getMysqlIO().extractData(1);
+            //int columnLength = this.mysqlConn.getMysqlIO().getLenEncodedInt();
+
+            //int columnType = (byte)this.mysqlConn.getMysqlIO().extractDataAsString(1);
+            int columnType = this.mysqlConn.getMysqlIO().extractData(1)[0] & 0xff;
+
+            Log.d("QueryResponse", "Column Name: " + columnName + " Type: " + columnType);
+            /*if (columnType == -4)
+            {
+                columnType = 0xfc;
+            }*/
+
+            int flags = this.mysqlConn.getMysqlIO().fromByteArray((byte[])this.mysqlConn.getMysqlIO().extractDataAsString(2));
+
+            int decimals = (byte)this.mysqlConn.getMysqlIO().extractDataAsString(1);
 
 
             //2 Byte NULL fillers so shift on another 2
@@ -77,11 +91,11 @@ public class COM_QueryResponse extends BasePacket
         //it in case we need it - don't think we do though!
         if (this.mysqlConn.isConnectedVersionLessThan(5,5,60))
         {
-            int packetLength = this.mysqlConn.getMysqlIO().fromByteArray((byte[]) this.mysqlConn.getMysqlIO().extractData(3));
-            int packetNumber = (byte) this.mysqlConn.getMysqlIO().extractData(1);
-            int eofMarker = (byte) this.mysqlConn.getMysqlIO().extractData(1);
-            int warnings = this.mysqlConn.getMysqlIO().fromByteArray((byte[]) this.mysqlConn.getMysqlIO().extractData(2));
-            int serverStatus = this.mysqlConn.getMysqlIO().fromByteArray((byte[]) this.mysqlConn.getMysqlIO().extractData(2));
+            int packetLength = this.mysqlConn.getMysqlIO().fromByteArray((byte[]) this.mysqlConn.getMysqlIO().extractDataAsString(3));
+            int packetNumber = (byte) this.mysqlConn.getMysqlIO().extractDataAsString(1);
+            int eofMarker = (byte) this.mysqlConn.getMysqlIO().extractDataAsString(1);
+            int warnings = this.mysqlConn.getMysqlIO().fromByteArray((byte[]) this.mysqlConn.getMysqlIO().extractDataAsString(2));
+            int serverStatus = this.mysqlConn.getMysqlIO().fromByteArray((byte[]) this.mysqlConn.getMysqlIO().extractDataAsString(2));
         }
         do
         {
@@ -97,13 +111,22 @@ public class COM_QueryResponse extends BasePacket
             for (; currentColumn < numberOfFields; currentColumn++)
             {
                 ColumnDefinition columnDefinition = columnDefinitions.get(currentColumn);
+                //Log.d("COMQueryResp", "Getting data for " + columnDefinition.getColumnName() + " with type: " + columnDefinition.getColumnType().toString());
                 int lengthOfValue = this.mysqlConn.getMysqlIO().getLenEncodedInt();
 
                 //Believe if the length of value is less than 0 (-5) then the value is NULL
-                String value = null;
+                Object value = null;
                 if (lengthOfValue > 0)
                 {
-                    value = this.mysqlConn.getMysqlIO().extractData(false, lengthOfValue);
+                    if (columnDefinition.getColumnType() == ColumnDefinition.ColumnType.BLOB)
+                    {
+                        value = this.mysqlConn.getMysqlIO().extractData(lengthOfValue);
+                    }
+                    else
+                    {
+                        value = (String)this.mysqlConn.getMysqlIO().extractDataAsString(false, lengthOfValue);
+                    }
+
                 }
                 else
                 {

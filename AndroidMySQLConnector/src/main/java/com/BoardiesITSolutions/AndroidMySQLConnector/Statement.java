@@ -3,6 +3,7 @@ package com.BoardiesITSolutions.AndroidMySQLConnector;
 import android.annotation.TargetApi;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
+import android.util.Log;
 
 import com.BoardiesITSolutions.AndroidMySQLConnector.Exceptions.InvalidSQLPacketException;
 import com.BoardiesITSolutions.AndroidMySQLConnector.Exceptions.MySQLConnException;
@@ -189,12 +190,13 @@ public class Statement
 
             COM_Query comQuery = new COM_Query(this.mysqlConn, COM_Query.COM_QUERY, query);
             byte[] data = comQuery.getPacketData().toByteArray();
-
+            MySQLIO.breakSocketGetData = false;
             SocketSender socketSender = new SocketSender(this.mysqlConn, new IIntConnectionInterface()
             {
                 @Override
                 public void socketDataSent()
                 {
+                    Log.d("Statement", "Interface for SocketDataSent called");
                     try {
                         if (Helpers.getMySQLPacketType(Statement.this.mysqlConn.getMysqlIO().getSocketByteArray()) == Helpers.MYSQL_PACKET_TYPE.MYSQL_ERROR_PACKET) {
                             try {

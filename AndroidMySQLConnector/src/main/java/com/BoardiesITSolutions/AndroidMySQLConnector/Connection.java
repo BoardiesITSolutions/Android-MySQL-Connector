@@ -1,10 +1,8 @@
 package com.BoardiesITSolutions.AndroidMySQLConnector;
 
 import android.annotation.TargetApi;
-import android.content.Context;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
-import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
@@ -312,34 +310,34 @@ public class Connection
 
             mysqlIO.shiftCurrentBytePosition(4);
 
-            protocolVersion = (byte) (mysqlIO.extractData(1));
+            protocolVersion = (byte) (mysqlIO.extractDataAsString(1));
 
-            serverVersion = mysqlIO.extractData(false);
+            serverVersion = mysqlIO.extractDataAsString(false);
 
             //Pass the server version in to the major, minor and subminor versions - these could
             //be used if things need to be done differently based on the server we're connecting to
             parseVersionNumber();
 
-            byte[] temp = (byte[]) mysqlIO.extractData(4);
+            byte[] temp = (byte[]) mysqlIO.extractDataAsString(4);
             temp = mysqlIO.swapByteArray(temp);
             connectionID = mysqlIO.fromByteArray(temp);
-            byte[] salt1 = (byte[]) mysqlIO.extractData(8);
+            byte[] salt1 = (byte[]) mysqlIO.extractDataAsString(8);
             authSalt = Connection.toString(salt1, 0, salt1.length);
             //There is a null terminator at the end of the salt, shift by one as we don't need it
             mysqlIO.shiftCurrentBytePosition(1);
 
 
-            byte[] serverCapabilities = (byte[]) mysqlIO.extractData(2);
+            byte[] serverCapabilities = (byte[]) mysqlIO.extractDataAsString(2);
             baseServerCapabilities = (serverCapabilities[0] & 0xff) | ((serverCapabilities[1] & 0xff) << 8);
             Connection.this.serverCapabilities = baseServerCapabilities;
 
-            //serverLanguage = String.format("%02X", (byte) mysqlIO.extractData(1));
-            serverLanguage = ((byte)mysqlIO.extractData(1)) & 0xff;
+            //serverLanguage = String.format("%02X", (byte) mysqlIO.extractDataAsString(1));
+            serverLanguage = ((byte)mysqlIO.extractDataAsString(1)) & 0xff;
 
             setCharset();
-            serverStatus = mysqlIO.fromByteArray((byte[]) mysqlIO.extractData(2));
+            serverStatus = mysqlIO.fromByteArray((byte[]) mysqlIO.extractDataAsString(2));
 
-            byte[] extendedServerCapabilitiesArray = (byte[]) mysqlIO.extractData(2);
+            byte[] extendedServerCapabilitiesArray = (byte[]) mysqlIO.extractDataAsString(2);
 
             int extendedServerCapabilities = (extendedServerCapabilitiesArray[0] & 0xff) | ((extendedServerCapabilitiesArray[1] & 0xff) << 8);
             Connection.this.extendedServerCapabilities = extendedServerCapabilities;
@@ -352,7 +350,7 @@ public class Connection
 
             if ((Connection.this.serverCapabilities & CLIENT_PLUGIN_AUTH) == CLIENT_PLUGIN_AUTH)
             {
-                authPluginDataLength = (byte) mysqlIO.extractData(1);
+                authPluginDataLength = (byte) mysqlIO.extractDataAsString(1);
             }
             else
             {
@@ -409,7 +407,7 @@ public class Connection
                     length = 13;
                 }
 
-                byte[] salt = (byte[]) mysqlIO.extractData(length);
+                byte[] salt = (byte[]) mysqlIO.extractDataAsString(length);
                 authSalt2 = Connection.toString(salt, 0, salt.length);
 
                 StringBuilder stringBuilder = new StringBuilder(length);
@@ -419,7 +417,7 @@ public class Connection
             }
 
             if ((Connection.this.serverCapabilities & CLIENT_PLUGIN_AUTH) == CLIENT_PLUGIN_AUTH) {
-                authPluginName = mysqlIO.extractData(false);
+                authPluginName = mysqlIO.extractDataAsString(false);
             }
 
             //Check if we're using TLS connection, if so we need to send an SSL Request Packet
@@ -773,7 +771,10 @@ public class Connection
 
     private void parseVersionNumber()
     {
-        this.serverVersion = this.serverVersion.substring(0, this.serverVersion.indexOf("-")-1);
+        if (this.serverVersion.indexOf("-") >= 0)
+        {
+            this.serverVersion = this.serverVersion.substring(0, this.serverVersion.indexOf("-") - 1);
+        }
         this.serverVersion = this.serverVersion.replaceAll("[^\\d.]", "");
         if ((this.serverVersion != null) && this.serverVersion.length() > 0)
         {
