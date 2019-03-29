@@ -89,7 +89,7 @@ public class COM_QueryResponse extends BasePacket
 
         //MySQL 5.1 appears to add an extra packet between the column definitions and the rows so we'll pass
         //it in case we need it - don't think we do though!
-        if (this.mysqlConn.isConnectedVersionLessThan(5,5,60))
+        if (this.mysqlConn.isConnectedVersionLessThan(5,6,60))
         {
             int packetLength = this.mysqlConn.getMysqlIO().fromByteArray((byte[]) this.mysqlConn.getMysqlIO().extractDataAsString(3));
             int packetNumber = (byte) this.mysqlConn.getMysqlIO().extractDataAsString(1);
