@@ -20,19 +20,19 @@ else
 }
 
 archivesBaseName="AndroidMySQLConnector"
-version '0.27'
+version '0.28'
 group 'com.BoardiesITSolutions'
 
 
 android {
-    compileSdkVersion 28
+    compileSdkVersion 29
     defaultConfig {
         //applicationId "com.BoardiesITSolutions.AndroidMySQLConnector"
         minSdkVersion 19
-        targetSdkVersion 28
-        versionCode 19
-        versionName "0.27"
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        targetSdkVersion 29
+        versionCode 20
+        versionName "0.28"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
         release {
@@ -88,8 +88,5 @@ def getArtifactFullPath() {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation 'com.android.support:appcompat-v7:28.0.0-rc02'
-    testImplementation 'junit:junit:4.12'
-    androidTestImplementation 'com.android.support.test:runner:1.0.2'
-    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+    implementation 'androidx.appcompat:appcompat:1.1.0'
 }

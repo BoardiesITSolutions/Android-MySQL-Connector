@@ -2,7 +2,7 @@ package com.BoardiesITSolutions.AndroidMySQLConnector;
 
 import android.annotation.TargetApi;
 import android.os.Build;
-import android.support.annotation.RequiresApi;
+import androidx.annotation.RequiresApi;
 import android.util.Log;
 
 import com.BoardiesITSolutions.AndroidMySQLConnector.Exceptions.InvalidSQLPacketException;
