@@ -83,8 +83,8 @@ android {
 }
 
 def getArtifactFullPath() {
-    return ".//build/outputs/aar/${archivesBaseName}-${project.version}.aar"
-    //return ".//build/outputs/aar/${archivesBaseName}-debug.aar"
+    //return ".//build/outputs/aar/${archivesBaseName}-${project.version}.aar"
+    return ".//build/outputs/aar/${archivesBaseName}-debug.aar"
 }
 
 dependencies {
