@@ -28,6 +28,7 @@ The library has been tested on the following MySQL Servers
     <li>5.5.59</li>
     <li>5.6.39</li>
     <li>5.7.22</li>
+    <li>8.0.13 - Limited</li>
 </ul>
 
 We've so far only tested on the the highest minor version of each MySQL major version. You'll notice
@@ -388,6 +389,48 @@ Performing a query to return a result set is pretty much the same as above, the 
             }
         });
 ```
+
+## MySQL 8 Support
+There is now provision support for MySQL 8 however, there are a few caveats in order for it to work. 
+If you have access to the administrator roles of the MySQL server then there's a couple of settings you
+need to add to your /etc/my.cnf file. 
+
+The settings to add are within the [mysqld] section
+```
+character-set-server = utf8
+skip-character-set-client-handshake
+default_authentication_plugin=mysql_native_password
+protocol_compression_algorithms=zlib,uncompressed
+```
+
+The settings above force the server into utf8. By default the server language is set to 0xff
+which is some form of UTF8 (Wireshark doesn't recognise it however) so the library will reject
+the connection if this value is detected and an exception is thrown. 
+
+In MySQL 8 the authentication method was changed from mysql_native_password to sha2_caching_password.
+There is start on attempting to get this to work but currently doesn't so you need to ensure your
+server is set to use mysql_native_password by default. If you already have an existing user that was
+created while the server was using the sha2_caching_password you will need to alter your user using
+the following command. 
+
+```
+ALTER USER 'user'@'%' IDENTIFIED WITH 'mysql_native_password' BY 'password'
+```
+
+The last item is to disable the new compression method. The library doesn't actually support
+compression so in the connection response the library sends back to the server it turns 
+off the compression capability flag, however on MySQL 8 even though Wireshark was showing this as 
+off, a MySQL connection error would still be returned stating that the wrong algorithm is used 
+for zstd compression so ensure zstd is actually off in your my.cnf. 
+
+You can leave zlib enabled in case you are using other client on your database that can support compression however. 
+
+These were the only settings we found needed changing on a default MySQL 8 Centos 7 build. If you install
+MySQL 8 yourself and have problems please sure to raise an issue and we'll do what we can to fix it. 
+
+We have also tested against a remote MySQL host at remotemysql.com which just so happens to already
+have the settings described turned on so the library is compatible with their DB with you needing to 
+worry about making any configuration changes. 
 
 ## Troubleshooting
 ### Cannot Resolve Symbol Error

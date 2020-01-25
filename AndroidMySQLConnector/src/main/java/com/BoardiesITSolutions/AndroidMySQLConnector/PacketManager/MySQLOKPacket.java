@@ -1,6 +1,6 @@
 package com.BoardiesITSolutions.AndroidMySQLConnector.PacketManager;
 
-import android.support.v7.widget.ThemedSpinnerAdapter;
+import androidx.appcompat.widget.ThemedSpinnerAdapter;
 import android.util.Log;
 
 import com.BoardiesITSolutions.AndroidMySQLConnector.Connection;

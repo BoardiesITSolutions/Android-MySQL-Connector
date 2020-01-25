@@ -1,5 +1,6 @@
 package com.BoardiesITSolutions.AndroidMySQLConnector.PacketManager;
 
+import android.os.Message;
 import android.util.Log;
 
 import com.BoardiesITSolutions.AndroidMySQLConnector.Connection;
@@ -10,6 +11,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -130,7 +132,38 @@ public class AuthResponse extends BasePacket
             else
             {
                 Log.e("AuthResponse", "Only mysql_native_password is currently supported");
-                throw new UnsupportedOperationException("mysql_native_password is currently only supported. Please use this authentication method");
+                Log.d("AuthResponse", "Auth Plugin Name: " + this.mysqlConn.getAuthPluginName());
+                if (this.mysqlConn.getAuthPluginName().equals("caching_sha2_password"))
+                {
+                    Log.d("AuthResponse", "Using MySQL Caching Sha2 Password");
+
+                    String password = this.mysqlConn.getPassword();
+
+                    MessageDigest hash1MD = sha256();
+                    byte[] hash1 = hash1MD.digest(password.getBytes(StandardCharsets.UTF_8));
+                    MessageDigest hash2MD = sha256();
+                    hash2MD.update(hash1MD.digest(hash1));
+                    hash2MD.update(this.mysqlConn.getAuthSalt().getBytes(StandardCharsets.UTF_8));
+                    byte[] hash2 = hash1MD.digest();
+
+                    byte[] hash3 = new byte[hash1.length];
+                    //Perform XOR
+                    int i = 0;
+                    for (byte b : hash1)
+                    {
+                        hash3[i] = (byte) (b ^ hash2[i++]);
+                    }
+
+                    dataOutPacket.write(hash3);
+
+                    //byte[] hash1 = sha256String(password);
+                    //byte[] hash2 = sha256Bytes(hash1);
+
+                }
+                else
+                {
+                    throw new UnsupportedOperationException("mysql_native_password is currently only supported. Please use this authentication method");
+                }
             }
 
             //Add the database if we have a database available
@@ -199,6 +232,22 @@ public class AuthResponse extends BasePacket
             ex.printStackTrace();
         }
     }
+
+    private MessageDigest sha256() throws NoSuchAlgorithmException
+    {
+        return MessageDigest.getInstance("SHA-256");
+        //byte[] encodedHash = digest.digest(data.getBytes(StandardCharsets.UTF_8));
+
+    }
+
+    /**
+     * Uses for MySQL Native Password
+     * @param password
+     * @param seed
+     * @return
+     * @throws NoSuchAlgorithmException
+     * @throws UnsupportedEncodingException
+     */
     private byte[] scramblePassword(String password, String seed) throws NoSuchAlgorithmException, UnsupportedEncodingException
     {
         MessageDigest md = MessageDigest.getInstance("SHA-1");

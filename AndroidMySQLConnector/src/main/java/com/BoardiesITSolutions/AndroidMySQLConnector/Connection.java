@@ -1,11 +1,9 @@
 package com.BoardiesITSolutions.AndroidMySQLConnector;
 
 import android.annotation.TargetApi;
-import android.content.Context;
 import android.os.Build;
-import android.support.annotation.RequiresApi;
-import android.support.v4.app.Fragment;
-import android.support.v7.app.AppCompatActivity;
+import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AppCompatActivity;
 import android.util.Log;
 
 
@@ -83,6 +81,8 @@ public class Connection
     public static final int CLIENT_PS_MULTI_RESULTS = 0x00040000;
     public static final int CLIENT_CAN_HANDLE_EXPIRED_PASSWORDS = 0x00400000;
     public static final int CLIENT_SESSION_TRACK = 0x00800000;
+
+    public static final int CLIENT_OPTIONAL_RESULTSET_METADATA = 1 << 25;
 
     //Character Sets
     private final int LATIN1_SWEDISH_CI = 0x08;
@@ -324,6 +324,11 @@ public class Connection
             temp = mysqlIO.swapByteArray(temp);
             connectionID = mysqlIO.fromByteArray(temp);
             byte[] salt1 = (byte[]) mysqlIO.extractData(8);
+            if (this.majorVersion == 8)
+            {
+                //Log.d("Connection", "Version 8 detected. Shifting 1 byte");
+                //mysqlIO.shiftCurrentBytePosition(1);
+            }
             authSalt = Connection.toString(salt1, 0, salt1.length);
             //There is a null terminator at the end of the salt, shift by one as we don't need it
             mysqlIO.shiftCurrentBytePosition(1);
@@ -364,7 +369,14 @@ public class Connection
             //Check if the server is supporting compression, if it does, we need to turn off as we don't
             if ((Connection.this.serverCapabilities & CLIENT_COMPRESS) == CLIENT_COMPRESS)
             {
+                Log.d("Connection", "Disabling client compress");
                 clientCapabilities &= ~CLIENT_COMPRESS;
+            }
+
+            //If MySQL 8 turn off can accept expired password
+            if (this.getMajorVersion() >= 8)
+            {
+                clientCapabilities &= ~CLIENT_OPTIONAL_RESULTSET_METADATA;
             }
 
             //Check if the server is set to don't allow database.table, if so unset it so we can
@@ -773,7 +785,11 @@ public class Connection
 
     private void parseVersionNumber()
     {
-        this.serverVersion = this.serverVersion.substring(0, this.serverVersion.indexOf("-")-1);
+        if (this.serverVersion.contains("-"))
+        {
+            this.serverVersion = this.serverVersion.substring(0, this.serverVersion.indexOf("-") - 1);
+        }
+
         this.serverVersion = this.serverVersion.replaceAll("[^\\d.]", "");
         if ((this.serverVersion != null) && this.serverVersion.length() > 0)
         {
