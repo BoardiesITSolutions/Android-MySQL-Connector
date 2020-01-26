@@ -1,1 +1,1 @@
-include ':AndroidMySQLConnector'
+include ':AndroidMySQLConnector', ':demoapplication'

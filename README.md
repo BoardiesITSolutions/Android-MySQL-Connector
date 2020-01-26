@@ -456,3 +456,10 @@ If it shows TLSv1 then this won't be supported by the Android MySQL Connector li
 If MySQL supports it, you can add `tls_version=TLSv1.1` or `tls_version=TLSv1.2` (Check your mysql version documentation to determine the supported TLS) to your `/etc/main.cf` file and restart MySQL. This needs to be added under the `mysqld` section of the config file.
 
 If you are using Amazon RDS then you will need to use at least MySQL 5.7.16. Previous version of Amazon RDS for MySQL only support TLS 1.0 so the library won't be able to connect. 
+
+# Demo Application
+There is a module in the project called demoapplication. This is a sample application that will show you how to 
+use the library and allow you to test connectivity to your database if you are having issues during your development with the library
+
+In the root of the demo application module there is a file called test_data.sql which you can import
+in to your database and then provide the app your connection details to confirm that all is working as expected.  
