@@ -20,7 +20,7 @@ else
 }
 
 archivesBaseName="AndroidMySQLConnector"
-version '0.28'
+version '0.30'
 group 'com.BoardiesITSolutions'
 
 
@@ -30,8 +30,8 @@ android {
         //applicationId "com.BoardiesITSolutions.AndroidMySQLConnector"
         minSdkVersion 19
         targetSdkVersion 29
-        versionCode 20
-        versionName "0.28"
+        versionCode 21
+        versionName "0.30"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     buildTypes {

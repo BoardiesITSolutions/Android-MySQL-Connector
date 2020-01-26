@@ -519,7 +519,16 @@ public class Connection
 
             SSLSocket sslSocket = (SSLSocket) sslf.createSocket(mysqlSocket, null,
                     mysqlSocket.getPort(), false);
-            sslSocket.setEnabledProtocols(new String[]{"TLSv1.1"});
+
+            // TLSv1.3 not supported until Android API 29 (Android 10)
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q)
+            {
+                sslSocket.setEnabledProtocols(new String[]{"TLSv1.1", "TLSv1.2"});
+            }
+            else
+            {
+                sslSocket.setEnabledProtocols(new String[]{"TLSv1.1", "TLSv1.2", "TLSv1.3"});
+            }
             sslSocket.setTcpNoDelay(true);
             sslSocket.setReuseAddress(true);
             sslSocket.setSoTimeout(5000);
