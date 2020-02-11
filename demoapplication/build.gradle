@@ -30,5 +30,5 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
     implementation 'androidx.appcompat:appcompat:1.1.0'
-    implementation 'com.github.BoardiesITSolutions:Android-MySQL-Connector:0.31_MySQL8'
+    implementation 'com.github.BoardiesITSolutions:Android-MySQL-Connector:0.32_MySQL8'
 }
