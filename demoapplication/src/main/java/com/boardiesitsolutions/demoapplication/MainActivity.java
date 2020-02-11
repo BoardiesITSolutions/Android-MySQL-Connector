@@ -47,6 +47,7 @@ public class MainActivity extends AppCompatActivity
     private Button btnSaveDetails;
     private SharedPreferences settings;
     private Button btnAddRandomRecord;
+    private Button btnSelectRecords;
 
     //Create class instance of your connection. You should re-use this connection for
     //every action on your database.
@@ -79,6 +80,9 @@ public class MainActivity extends AppCompatActivity
 
         btnAddRandomRecord = findViewById(R.id.btnAddRandomRecord);
         btnAddRandomRecord.setOnClickListener(mBtnAddRandomRecordClickListener);
+
+        btnSelectRecords = findViewById(R.id.btnSelectRecords);
+        btnSelectRecords.setOnClickListener(mBtnSelectRecordsClickListener);
     }
 
     /**
@@ -126,7 +130,7 @@ public class MainActivity extends AppCompatActivity
                     public void run()
                     {
                         Toast.makeText(MainActivity.this, "Connected to database successfully", Toast.LENGTH_SHORT).show();
-                        selectTableRecords();
+                        //selectTableRecords();
                     }
                 });
             }
@@ -225,6 +229,14 @@ public class MainActivity extends AppCompatActivity
                     showError("General Exception", exception.toString());
                 }
             });
+        }
+    };
+
+    private View.OnClickListener mBtnSelectRecordsClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v)
+        {
+            selectTableRecords();
         }
     };
 

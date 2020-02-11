@@ -132,6 +132,10 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/add_random_record" />
+    <Button android:id="@+id/btnSelectRecords"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/select_records" />
     <TableLayout android:id="@+id/resultTable"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">

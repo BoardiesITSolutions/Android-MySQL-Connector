@@ -106,6 +106,7 @@ public class AuthResponse extends BasePacket
                         if (this.mysqlConn.isConnectedVersionLessThan(5,5,0)) {
                             dataOutPacket.writeByte(0x14);
                         }
+                        Log.d("AuthResponse", "Length of Hash: " + password.length + " Expected: " + this.mysqlConn.getAuthPluginDataLength());
                         dataOutPacket.write(password);
 
                         //The documentation states the password should be NULL terminated, however, if its null
@@ -152,10 +153,15 @@ public class AuthResponse extends BasePacket
                     for (byte b : hash1)
                     {
                         hash3[i] = (byte) (b ^ hash2[i++]);
+                        //hash3[i] = (byte)((int)b ^ (int)hash2[i++]);
                     }
-
+                    //hash3[hash3.length-1] = 0x00;
+                    Log.d("AuthResponse", "Length of Hash: " + hash3.length + " Expected: " + this.mysqlConn.getAuthPluginDataLength());
+                    dataOutPacket.writeByte(0x20);
                     dataOutPacket.write(hash3);
 
+
+                    //dataOutPacket.writeByte(0);
                     //byte[] hash1 = sha256String(password);
                     //byte[] hash2 = sha256Bytes(hash1);
 

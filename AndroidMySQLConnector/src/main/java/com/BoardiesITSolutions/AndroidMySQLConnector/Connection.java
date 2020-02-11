@@ -41,6 +41,7 @@ public class Connection
     private int port = 3306;
 
     //Connection Details
+    private boolean isMariaDB = false;
     private int majorVersion;
     private int minorVersion;
     private int subMinorVersion;
@@ -135,6 +136,11 @@ public class Connection
         {
             return Charset.forName("UTF-8");
         }
+    }
+
+    public boolean isMariaDB()
+    {
+        return isMariaDB;
     }
 
     public int getServerLanguage()
@@ -316,6 +322,12 @@ public class Connection
 
             serverVersion = mysqlIO.extractData(false);
 
+            if (serverVersion.contains("MariaDB"))
+            {
+                Log.d("MySQL Connection", "Detected Server as MariaDB");
+                this.isMariaDB = true;
+            }
+
             //Pass the server version in to the major, minor and subminor versions - these could
             //be used if things need to be done differently based on the server we're connecting to
             parseVersionNumber();
@@ -377,6 +389,8 @@ public class Connection
             if (this.getMajorVersion() >= 8)
             {
                 clientCapabilities &= ~CLIENT_OPTIONAL_RESULTSET_METADATA;
+                clientCapabilities &= ~CLIENT_SSL;
+
             }
 
             //Check if the server is set to don't allow database.table, if so unset it so we can
@@ -435,7 +449,7 @@ public class Connection
             }
 
             //Check if we're using TLS connection, if so we need to send an SSL Request Packet
-            if ((Connection.this.serverCapabilities & CLIENT_SSL) == CLIENT_SSL)
+            if ((Connection.this.serverCapabilities & CLIENT_SSL) == CLIENT_SSL && getMajorVersion() < 8)
             {
                 sendSSLRequest();
             }
@@ -536,17 +550,22 @@ public class Connection
             List<String> allowedCiphers = null;
             boolean disableDHAlgorithm = true;
 
-            if (disableDHAlgorithm) {
-                allowedCiphers = new ArrayList<String>();
-                for (String cipher : sslSocket.getEnabledCipherSuites()) {
-                    if (!(disableDHAlgorithm && (cipher.indexOf("_DHE_") > -1 || cipher.indexOf("_DH_") > -1))) {
-                        allowedCiphers.add(cipher);
-                    }
+            if (this.getMajorVersion() == 8)
+            {
+                disableDHAlgorithm = false;
+            }
+
+            String[] enabledCipherSuites = sslSocket.getEnabledCipherSuites();
+
+            allowedCiphers = new ArrayList<String>();
+            for (String cipher : enabledCipherSuites) {
+                if (!(disableDHAlgorithm && (cipher.indexOf("_DHE_") > -1 || cipher.indexOf("_DH_") > -1))) {
+                    allowedCiphers.add(cipher);
                 }
             }
 
             // if some ciphers were filtered into allowedCiphers
-            if (allowedCiphers != null) {
+            if (allowedCiphers.size() > 0) {
                 sslSocket.setEnabledCipherSuites(allowedCiphers.toArray(new String[0]));
             }
 
