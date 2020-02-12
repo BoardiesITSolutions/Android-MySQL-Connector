@@ -89,6 +89,7 @@ public class Connection
     private final int LATIN1_SWEDISH_CI = 0x08;
     private final int UTF8_GENERAL_CI = 0x21;
     private final int UTF8_UNICODE_CI =0xc0;
+    private final int UTF8MB4_UNICODE_CI = 0xe0;
     private final int BINARY = 0x3f;
 
     private AppCompatActivity activity;
@@ -484,6 +485,7 @@ public class Connection
                 break;
             case UTF8_GENERAL_CI:
             case UTF8_UNICODE_CI:
+            case UTF8MB4_UNICODE_CI:
                 charset = Charset.forName("UTF-8");
                 break;
                 default:
