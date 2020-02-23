@@ -5,6 +5,7 @@ import android.util.Log;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.concurrent.Semaphore;
 
 import static com.BoardiesITSolutions.AndroidMySQLConnector.Connection.CLIENT_SSL;
 
@@ -13,6 +14,7 @@ public class SocketSender extends AsyncTask<byte[], Void, Void>
     IIntConnectionInterface iIntConnectionInterface;
     Connection mysqlConn;
     private static final String TAG = "SocketSender";
+    private Semaphore mutex = new Semaphore(1);
 
     public SocketSender(Connection mysqlConn, IIntConnectionInterface iIntConnectionInterface)
     {
@@ -25,6 +27,7 @@ public class SocketSender extends AsyncTask<byte[], Void, Void>
     {
         try
         {
+            mutex.acquire();
             byte[] byteArray = bytes[0];
             if (byteArray == null)
             {
@@ -51,11 +54,14 @@ public class SocketSender extends AsyncTask<byte[], Void, Void>
             }
             this.mysqlConn.getMysqlIO().reset();
             iIntConnectionInterface.socketDataSent();
+            mutex.release();
         }
-        catch (IOException ex)
+        catch (IOException | InterruptedException ex)
         {
+            mutex.release();
             Log.e(TAG, ex.toString());
         }
+
         return null;
     }
 

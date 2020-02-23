@@ -1,5 +1,7 @@
 package com.BoardiesITSolutions.AndroidMySQLConnector.PacketManager;
 
+import android.util.Log;
+
 import com.BoardiesITSolutions.AndroidMySQLConnector.Connection;
 
 import java.io.ByteArrayOutputStream;

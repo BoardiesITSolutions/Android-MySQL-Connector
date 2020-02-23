@@ -52,9 +52,35 @@ public class Helpers
         {
             return MYSQL_PACKET_TYPE.MYSQL_EOF_PACKET;
         }
-        else
+        else if (packetType == 0x00)
         {
             return MYSQL_PACKET_TYPE.MYSQL_OK_PACKET;
+        }
+        else
+        {
+            //If its unknwon packet then we probably at this point don't care
+            //as we're not in the right place to check the packet type and should just
+            //continue what data is available
+            return MYSQL_PACKET_TYPE.MYSQL_UNKNOWN_PACKET;
+        }
+    }
+
+    /**
+     * Checks whether its possible that we have an EOF packet. You sometimes can get an EOF looking
+     * packet when its actually a Length Encoded Integer. So check the socket length to determine
+     * if this is a true EOF packet
+     * @param mySQLIO
+     * @return
+     */
+    public static boolean checkIfRealEOFPacket(MySQLIO mySQLIO)
+    {
+        if ((mySQLIO.getSocketDataLength() - mySQLIO.getCurrentBytesRead()) < 9)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
         }
     }
 }

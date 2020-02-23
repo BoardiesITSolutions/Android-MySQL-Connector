@@ -1,7 +1,12 @@
 package com.BoardiesITSolutions.AndroidMySQLConnector.PacketManager;
 
+import android.util.Log;
+
+import androidx.appcompat.widget.ThemedSpinnerAdapter;
+
 import com.BoardiesITSolutions.AndroidMySQLConnector.ColumnDefinition;
 import com.BoardiesITSolutions.AndroidMySQLConnector.Connection;
+import com.BoardiesITSolutions.AndroidMySQLConnector.Exceptions.MySQLException;
 import com.BoardiesITSolutions.AndroidMySQLConnector.Helpers;
 import com.BoardiesITSolutions.AndroidMySQLConnector.MySQLRow;
 
@@ -28,7 +33,17 @@ public class COM_QueryResponse extends BasePacket
         this.setPacketLength(this.mysqlConn.getMysqlIO().fromByteArray((byte[]) this.mysqlConn.getMysqlIO().extractData(3)));
         this.setPacketSequenceNumber((byte)this.mysqlConn.getMysqlIO().extractData(1));
 
+        Log.d("Query Response", "Packet Length: " + this.getPacketLength() + " Packet Sequence: " + this.getPacketSequenceNumber());
+
         int numberOfFields = (byte)this.mysqlConn.getMysqlIO().extractData(1);
+
+        if (numberOfFields == 0)
+        {
+            Log.d("COM_QueryResponse","Number of fields is 0, so treating as OK packet");
+            return;
+        }
+
+        Log.d("COM_QueryResponse", "Number of Fields: " + numberOfFields);
 
         for (int currentColumnCount = 0; currentColumnCount < numberOfFields; currentColumnCount++)
         {
@@ -83,19 +98,81 @@ public class COM_QueryResponse extends BasePacket
             int warnings = this.mysqlConn.getMysqlIO().fromByteArray((byte[]) this.mysqlConn.getMysqlIO().extractData(2));
             int serverStatus = this.mysqlConn.getMysqlIO().fromByteArray((byte[]) this.mysqlConn.getMysqlIO().extractData(2));
         }
+
+        int timesProcessed = 0;
+        boolean finishedProcessingColumns = false;
         do
         {
-            this.mysqlConn.getMysqlIO().shiftCurrentBytePosition(4);
-            MySQLRow row = new MySQLRow();
-            int packetType = this.mysqlConn.getMysqlIO().readCurrentByteWithoutShift();
-            if (Helpers.getMySQLPacketTypeFromIntWithoutShift(packetType) == Helpers.MYSQL_PACKET_TYPE.MYSQL_EOF_PACKET)
+            if (finishedProcessingColumns)
             {
-                //We've got an EOF packet so we're at the end or an OK packet so we've got everything we need
                 break;
             }
+            int packetType = this.mysqlConn.getMysqlIO().readCurrentByteWithoutShift() & 0xff;
+            if (Helpers.getMySQLPacketTypeFromIntWithoutShift(packetType) == Helpers.MYSQL_PACKET_TYPE.MYSQL_OK_PACKET ||
+                    Helpers.getMySQLPacketTypeFromIntWithoutShift(packetType) == Helpers.MYSQL_PACKET_TYPE.MYSQL_EOF_PACKET)
+            {
+                if (Helpers.checkIfRealEOFPacket(this.mysqlConn.getMysqlIO()))
+                {
+                    Log.d("COM_QueryResponse", "Received EOF packet on processing column definition");
+                    break;
+                }
+            }
+
+            if ((this.mysqlConn.getMysqlIO().getCurrentBytesRead() + 4) >= this.mysqlConn.getMysqlIO().getSocketDataLength())
+            {
+                break;
+            }
+            this.mysqlConn.getMysqlIO().shiftCurrentBytePosition(4);
+
+            //Check we don't have an error packet
+            if (Helpers.getMySQLPacketTypeFromIntWithoutShift(packetType) == Helpers.MYSQL_PACKET_TYPE.MYSQL_ERROR_PACKET)
+            {
+                try {
+                    MySQLErrorPacket errorPacket = new MySQLErrorPacket(this.mysqlConn);
+                    throw new MySQLException(errorPacket.getErrorMsg(), errorPacket.getErrorCode(), errorPacket.getSqlState());
+                }
+                catch (Exception ex)
+                {
+                    Log.e("COM_QueryResponse", ex.toString());
+                }
+                break;
+            }
+
+
+
+
+            MySQLRow row = new MySQLRow();
+
+            /*if (Helpers.getMySQLPacketTypeFromIntWithoutShift(packetType) == Helpers.MYSQL_PACKET_TYPE.MYSQL_EOF_PACKET
+                || Helpers.getMySQLPacketTypeFromIntWithoutShift(packetType) == Helpers.MYSQL_PACKET_TYPE.MYSQL_OK_PACKET)
+            {
+                Log.d("COM_QueryResponse", "Got EOF or OK Packet. Breaking from loop");
+                //We've got an EOF packet so we're at the end or an OK packet so we've got everything we need
+                break;
+            }*/
+
             int currentColumn = 0;
             for (; currentColumn < numberOfFields; currentColumn++)
             {
+                packetType = this.mysqlConn.getMysqlIO().readCurrentByteWithoutShift() & 0xff;
+                if (Helpers.getMySQLPacketTypeFromIntWithoutShift(packetType) == Helpers.MYSQL_PACKET_TYPE.MYSQL_OK_PACKET ||
+                        Helpers.getMySQLPacketTypeFromIntWithoutShift(packetType) == Helpers.MYSQL_PACKET_TYPE.MYSQL_EOF_PACKET)
+                {
+
+                    if ((this.mysqlConn.getMysqlIO().getSocketDataLength() - this.mysqlConn.getMysqlIO().getCurrentBytesRead()) < 9)
+                    {
+                        //We've got an EOF packet and the remaining data in the socket data is less than 9 so this is a true 0xFE.
+                        //You sometimes get an 0xFE packet when its actually a len encoded integer. As this is a true EOF packet
+                        //we can break from the loop as we have everything we need
+                        finishedProcessingColumns = true;
+                        //We've created a row object in case we needed it, but as we've detected as an EOF packet,
+                        //set the row to null so it doesn't get added to to the resultset.
+                        row = null;
+                        break;
+                    }
+                    //We've got an EOF packet but there's actually more data so not a true EOF packet so shift 9 bytes
+                    this.mysqlConn.getMysqlIO().shiftCurrentBytePosition(9);
+                }
                 ColumnDefinition columnDefinition = columnDefinitions.get(currentColumn);
                 int lengthOfValue = this.mysqlConn.getMysqlIO().getLenEncodedInt();
 
@@ -103,7 +180,14 @@ public class COM_QueryResponse extends BasePacket
                 String value = null;
                 if (lengthOfValue > 0)
                 {
-                    value = this.mysqlConn.getMysqlIO().extractData(false, lengthOfValue);
+                    try {
+                        value = this.mysqlConn.getMysqlIO().extractData(false, lengthOfValue);
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.e("COM_QueryResponse", "About to pop");
+                        ex.printStackTrace();
+                    }
                 }
                 else
                 {
@@ -112,9 +196,15 @@ public class COM_QueryResponse extends BasePacket
 
                 row.addRowValue(columnDefinition, value);
             }
-            this.rows.add(row);
+            //Check we haven't got a blank row as we got an EOF packet
 
+            if (row != null) {
+                this.rows.add(row);
+            }
+            timesProcessed++;
         }while(true);
+
+
     }
 
     public List<ColumnDefinition> getColumnDefinitions()

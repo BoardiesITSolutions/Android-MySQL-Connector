@@ -83,6 +83,9 @@ public class Connection
     public static final int CLIENT_CAN_HANDLE_EXPIRED_PASSWORDS = 0x00400000;
     public static final int CLIENT_SESSION_TRACK = 0x00800000;
 
+
+    public static final int MULTI_RESULTS = 1 << 17;
+    public static final int DEPRECATE_EOF = 1 << 24;
     public static final int CLIENT_OPTIONAL_RESULTSET_METADATA = 1 << 25;
 
     //Character Sets
@@ -394,6 +397,9 @@ public class Connection
 
             }
 
+            clientCapabilities &= ~DEPRECATE_EOF;
+            clientCapabilities &= ~MULTI_RESULTS;
+
             //Check if the server is set to don't allow database.table, if so unset it so we can
             //Having this enabled means SHOW TABLES and SHOW DATABASES can't be executed as it will only
             //use the database that we are  connected to
@@ -614,104 +620,92 @@ public class Connection
                 @Override
                 public void socketDataSent()
                 {
-                    Log.d("Connection", "Socket Data Sent");
-                    try {
-                        Helpers.MYSQL_PACKET_TYPE mysqlPacketType = Helpers.getMySQLPacketType(Connection.this.mysqlIO.getSocketByteArray());
-                        if (mysqlPacketType == Helpers.MYSQL_PACKET_TYPE.MYSQL_ERROR_PACKET) {
-                            MySQLErrorPacket mySQLErrorPacket = new MySQLErrorPacket(Connection.this);
-                            //We can't do anything else here, so throw a MySQLConnException
+                    synchronized (mysqlIO.getConnection()) {
+                        Log.d("Connection", "Socket Data Sent");
+                        try {
+                            Helpers.MYSQL_PACKET_TYPE mysqlPacketType = Helpers.getMySQLPacketType(Connection.this.mysqlIO.getSocketByteArray());
+                            if (mysqlPacketType == Helpers.MYSQL_PACKET_TYPE.MYSQL_ERROR_PACKET) {
+                                MySQLErrorPacket mySQLErrorPacket = new MySQLErrorPacket(Connection.this);
+                                //We can't do anything else here, so throw a MySQLConnException
 
-                            final MySQLConnException connException = new MySQLConnException(mySQLErrorPacket.getErrorMsg(), mySQLErrorPacket.getErrorCode(), mySQLErrorPacket.getSqlState());
-                            if (getReturnCallbackToMainThread())
-                            {
-                                getActivity().runOnUiThread(new Runnable()
-                                {
-                                    @Override
-                                    public void run()
-                                    {
-                                        iConnectionInterface.handleMySQLConnException(connException);
-                                    }
-                                });
-                            }
-                            else
-                            {
-                                iConnectionInterface.handleMySQLConnException(connException);
-                            }
-                        }
-                        else if (mysqlPacketType == Helpers.MYSQL_PACKET_TYPE.MYSQL_OK_PACKET) {
-                            MySQLOKPacket mySQLOKPacket = new MySQLOKPacket(Connection.this);
-                            if (getReturnCallbackToMainThread())
-                            {
-                                getActivity().runOnUiThread(new Runnable()
-                                {
-                                    @Override
-                                    public void run()
-                                    {
-                                        iConnectionInterface.actionCompleted();
-                                    }
-                                });
-                            }
-                            else
-                            {
-                                iConnectionInterface.actionCompleted();
-                            }
-                        }
-                        else if (mysqlPacketType == Helpers.MYSQL_PACKET_TYPE.MYSQL_EOF_PACKET)
-                        {
-                            MySQLOKPacket mySQLOKPacket = new MySQLOKPacket(Connection.this);
-                            if (getReturnCallbackToMainThread())
-                            {
-                                getActivity().runOnUiThread(new Runnable()
-                                {
-                                    @Override
-                                    public void run()
-                                    {
-                                        iConnectionInterface.actionCompleted();
-                                    }
-                                });
-                            }
-                            else
-                            {
-                                iConnectionInterface.actionCompleted();
-                            }
-                        }
-                    }
-                    catch (final IOException ex)
-                    {
-                        Log.e("MySQLConnection", ex.toString());
-                        if (getReturnCallbackToMainThread())
-                        {
-                            getActivity().runOnUiThread(new Runnable()
-                            {
-                                @Override
-                                public void run()
-                                {
-                                    iConnectionInterface.handleIOException(ex);
+                                final MySQLConnException connException = new MySQLConnException(mySQLErrorPacket.getErrorMsg(), mySQLErrorPacket.getErrorCode(), mySQLErrorPacket.getSqlState());
+                                if (getReturnCallbackToMainThread()) {
+                                    getActivity().runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run()
+                                        {
+                                            iConnectionInterface.handleMySQLConnException(connException);
+                                        }
+                                    });
                                 }
-                            });
-                        }
-                        else
-                        {
-                            iConnectionInterface.handleIOException(ex);
-                        }
-                    }
-                    catch (final InvalidSQLPacketException ex)
-                    {
-                        Log.e("MySQLConnection", ex.toString());
-                        if (getReturnCallbackToMainThread())
-                        {
-                            getActivity().runOnUiThread(new Runnable()
-                            {
-                                @Override
-                                public void run()
-                                {
-                                    iConnectionInterface.handleInvalidSQLPacketException(ex);
+                                else {
+                                    iConnectionInterface.handleMySQLConnException(connException);
                                 }
-                            });
+                            }
+                            else if (mysqlPacketType == Helpers.MYSQL_PACKET_TYPE.MYSQL_OK_PACKET) {
+                                MySQLOKPacket mySQLOKPacket = new MySQLOKPacket(Connection.this);
+                                if (getReturnCallbackToMainThread()) {
+                                    getActivity().runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run()
+                                        {
+                                            Connection.this.mysqlIO.setIsDBConnected(true);
+                                            iConnectionInterface.actionCompleted();
+                                        }
+                                    });
+                                }
+                                else {
+                                    Connection.this.mysqlIO.setIsDBConnected(true);
+                                    iConnectionInterface.actionCompleted();
+                                }
+                            }
+                            else if (mysqlPacketType == Helpers.MYSQL_PACKET_TYPE.MYSQL_EOF_PACKET) {
+                                MySQLOKPacket mySQLOKPacket = new MySQLOKPacket(Connection.this);
+                                if (getReturnCallbackToMainThread()) {
+                                    getActivity().runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run()
+                                        {
+                                            Connection.this.mysqlIO.setIsDBConnected(true);
+                                            iConnectionInterface.actionCompleted();
+                                        }
+                                    });
+                                }
+                                else {
+                                    Connection.this.mysqlIO.setIsDBConnected(true);
+                                    iConnectionInterface.actionCompleted();
+                                }
+                            }
                         }
-                        else
-                        {
-                            iConnectionInterface.handleInvalidSQLPacketException(ex);
+                        catch (final IOException ex) {
+                            Log.e("MySQLConnection", ex.toString());
+                            if (getReturnCallbackToMainThread()) {
+                                getActivity().runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run()
+                                    {
+                                        iConnectionInterface.handleIOException(ex);
+                                    }
+                                });
+                            }
+                            else {
+                                iConnectionInterface.handleIOException(ex);
+                            }
+                        }
+                        catch (final InvalidSQLPacketException ex) {
+                            Log.e("MySQLConnection", ex.toString());
+                            if (getReturnCallbackToMainThread()) {
+                                getActivity().runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run()
+                                    {
+                                        iConnectionInterface.handleInvalidSQLPacketException(ex);
+                                    }
+                                });
+                            }
+                            else {
+                                iConnectionInterface.handleInvalidSQLPacketException(ex);
+                            }
                         }
                     }
                 }
@@ -810,7 +804,9 @@ public class Connection
 
     public Statement createStatement()
     {
-        return new Statement(this);
+        synchronized (this.mysqlIO.getConnection()) {
+            return new Statement(this);
+        }
     }
 
     private void parseVersionNumber()

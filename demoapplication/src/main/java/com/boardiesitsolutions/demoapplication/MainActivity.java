@@ -3,6 +3,7 @@ package com.boardiesitsolutions.demoapplication;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
@@ -274,8 +275,11 @@ public class MainActivity extends AppCompatActivity
                                 TextView idCol = newRow.findViewById(R.id.lblId);
                                 TextView fieldCol = newRow.findViewById(R.id.lblFieldValue);
 
+                                String fieldValue = row.getString("Field1");
+                                Log.d("MainActivity", "Field Value: " + fieldValue);
+
                                 idCol.setText(String.valueOf(row.getInt("id")));
-                                fieldCol.setText(row.getString("Field1"));
+                                fieldCol.setText(fieldValue);
                                 tableLayout.addView(newRow);
                             }
                             catch (SQLColumnNotFoundException ex)

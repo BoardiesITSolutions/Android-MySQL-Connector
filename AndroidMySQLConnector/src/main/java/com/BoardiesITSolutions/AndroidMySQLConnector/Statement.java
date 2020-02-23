@@ -2,6 +2,8 @@ package com.BoardiesITSolutions.AndroidMySQLConnector;
 
 import android.annotation.TargetApi;
 import android.os.Build;
+import android.util.Log;
+
 import androidx.annotation.RequiresApi;
 
 import com.BoardiesITSolutions.AndroidMySQLConnector.Exceptions.InvalidSQLPacketException;
@@ -13,11 +15,13 @@ import com.BoardiesITSolutions.AndroidMySQLConnector.PacketManager.MySQLErrorPac
 import com.BoardiesITSolutions.AndroidMySQLConnector.PacketManager.MySQLOKPacket;
 
 import java.io.IOException;
+import java.util.concurrent.Semaphore;
 
 public class Statement
 {
     Connection mysqlConn;
     int affectedRows = 0;
+    private static final Semaphore mutex = new Semaphore(1);
 
     public Statement(Connection mysqlConn)
     {
@@ -38,12 +42,12 @@ public class Statement
     public void execute(String query, final IConnectionInterface iConnectionInterface)
     {
         try {
+            mutex.acquire();
             this.mysqlConn.resetPacketSequenceNumber(true);
             COM_Query comQuery = new COM_Query(this.mysqlConn, COM_Query.COM_QUERY, query);
             byte[] data = comQuery.getPacketData().toByteArray();
 
-            SocketSender socketSender = new SocketSender(this.mysqlConn, new IIntConnectionInterface()
-            {
+            SocketSender socketSender = new SocketSender(this.mysqlConn, new IIntConnectionInterface() {
                 @Override
                 public void socketDataSent()
                 {
@@ -55,10 +59,8 @@ public class Statement
                                 throw new MySQLException(mySQLErrorPacket.getErrorMsg(), mySQLErrorPacket.getErrorCode(), mySQLErrorPacket.getSqlState());
                             }
                             catch (final InvalidSQLPacketException e) {
-                                if (mysqlConn.getReturnCallbackToMainThread())
-                                {
-                                    mysqlConn.getActivity().runOnUiThread(new Runnable()
-                                    {
+                                if (mysqlConn.getReturnCallbackToMainThread()) {
+                                    mysqlConn.getActivity().runOnUiThread(new Runnable() {
                                         @Override
                                         public void run()
                                         {
@@ -66,16 +68,13 @@ public class Statement
                                         }
                                     });
                                 }
-                                else
-                                {
+                                else {
                                     iConnectionInterface.handleInvalidSQLPacketException(e);
                                 }
                             }
                             catch (final MySQLException ex) {
-                                if (mysqlConn.getReturnCallbackToMainThread())
-                                {
-                                    mysqlConn.getActivity().runOnUiThread(new Runnable()
-                                    {
+                                if (mysqlConn.getReturnCallbackToMainThread()) {
+                                    mysqlConn.getActivity().runOnUiThread(new Runnable() {
                                         @Override
                                         public void run()
                                         {
@@ -83,8 +82,7 @@ public class Statement
                                         }
                                     });
                                 }
-                                else
-                                {
+                                else {
                                     iConnectionInterface.handleMySQLException(ex);
                                 }
                             }
@@ -92,15 +90,12 @@ public class Statement
                         else {
 
                             if (Helpers.getMySQLPacketType(Statement.this.mysqlConn.getMysqlIO().getSocketByteArray()) == Helpers.MYSQL_PACKET_TYPE.MYSQL_OK_PACKET) {
-                                try
-                                {
+                                try {
                                     MySQLOKPacket mySQLOKPacket = new MySQLOKPacket(Statement.this.mysqlConn);
                                     affectedRows = mySQLOKPacket.getAffectedRows();
                                     Statement.this.mysqlConn.setLastInsertID(mySQLOKPacket.getLastInsertID());
-                                    if (mysqlConn.getReturnCallbackToMainThread())
-                                    {
-                                        mysqlConn.getActivity().runOnUiThread(new Runnable()
-                                        {
+                                    if (mysqlConn.getReturnCallbackToMainThread()) {
+                                        mysqlConn.getActivity().runOnUiThread(new Runnable() {
                                             @Override
                                             public void run()
                                             {
@@ -108,16 +103,13 @@ public class Statement
                                             }
                                         });
                                     }
-                                    else
-                                    {
+                                    else {
                                         iConnectionInterface.actionCompleted();
                                     }
                                 }
                                 catch (final InvalidSQLPacketException e) {
-                                    if (mysqlConn.getReturnCallbackToMainThread())
-                                    {
-                                        mysqlConn.getActivity().runOnUiThread(new Runnable()
-                                        {
+                                    if (mysqlConn.getReturnCallbackToMainThread()) {
+                                        mysqlConn.getActivity().runOnUiThread(new Runnable() {
                                             @Override
                                             public void run()
                                             {
@@ -125,19 +117,17 @@ public class Statement
                                             }
                                         });
                                     }
-                                    else
-                                    {
+                                    else {
                                         iConnectionInterface.handleInvalidSQLPacketException(e);
                                     }
                                 }
                             }
                         }
+                        mutex.release();
                     }
                     catch (final IOException ex) {
-                        if (mysqlConn.getReturnCallbackToMainThread())
-                        {
-                            mysqlConn.getActivity().runOnUiThread(new Runnable()
-                            {
+                        if (mysqlConn.getReturnCallbackToMainThread()) {
+                            mysqlConn.getActivity().runOnUiThread(new Runnable() {
                                 @Override
                                 public void run()
                                 {
@@ -145,20 +135,18 @@ public class Statement
                                 }
                             });
                         }
-                        else
-                        {
+                        else {
                             iConnectionInterface.handleIOException(ex);
                         }
+                        mutex.release();
                     }
                 }
 
                 @Override
                 public void handleException(final MySQLConnException ex)
                 {
-                    if (mysqlConn.getReturnCallbackToMainThread())
-                    {
-                        mysqlConn.getActivity().runOnUiThread(new Runnable()
-                        {
+                    if (mysqlConn.getReturnCallbackToMainThread()) {
+                        mysqlConn.getActivity().runOnUiThread(new Runnable() {
                             @Override
                             public void run()
                             {
@@ -166,141 +154,130 @@ public class Statement
                             }
                         });
                     }
-                    else
-                    {
+                    else {
                         iConnectionInterface.handleMySQLConnException(ex);
                     }
+                    mutex.release();
                 }
             });
 
             socketSender.execute(data);
         }
-        catch  (IOException ex)
-        {
+        catch (IOException ex) {
             iConnectionInterface.handleIOException(ex);
+            mutex.release();
+        }
+        catch (Exception ex)
+        {
+            Log.e("Statement", ex.toString());
+            mutex.release();
         }
     }
 
     public void executeQuery(String query, final IResultInterface iResultInterface)
     {
-        try
-        {
-            this.mysqlConn.resetPacketSequenceNumber(true);
+        synchronized (this.mysqlConn) {
+            try {
+                this.mysqlConn.resetPacketSequenceNumber(true);
 
-            COM_Query comQuery = new COM_Query(this.mysqlConn, COM_Query.COM_QUERY, query);
-            byte[] data = comQuery.getPacketData().toByteArray();
+                COM_Query comQuery = new COM_Query(this.mysqlConn, COM_Query.COM_QUERY, query);
+                byte[] data = comQuery.getPacketData().toByteArray();
 
-            SocketSender socketSender = new SocketSender(this.mysqlConn, new IIntConnectionInterface()
-            {
-                @Override
-                public void socketDataSent()
-                {
-                    try {
-                        if (Helpers.getMySQLPacketType(Statement.this.mysqlConn.getMysqlIO().getSocketByteArray()) == Helpers.MYSQL_PACKET_TYPE.MYSQL_ERROR_PACKET) {
-                            try {
-                                MySQLErrorPacket mySQLErrorPacket = new MySQLErrorPacket(Statement.this.mysqlConn);
-                                throw new MySQLException(mySQLErrorPacket.getErrorMsg(), mySQLErrorPacket.getErrorCode(), mySQLErrorPacket.getSqlState());
+                SocketSender socketSender = new SocketSender(this.mysqlConn, new IIntConnectionInterface() {
+                    @Override
+                    public void socketDataSent()
+                    {
+                        try {
+                            if (Helpers.getMySQLPacketType(Statement.this.mysqlConn.getMysqlIO().getSocketByteArray()) == Helpers.MYSQL_PACKET_TYPE.MYSQL_ERROR_PACKET) {
+                                try {
+                                    MySQLErrorPacket mySQLErrorPacket = new MySQLErrorPacket(Statement.this.mysqlConn);
+                                    throw new MySQLException(mySQLErrorPacket.getErrorMsg(), mySQLErrorPacket.getErrorCode(), mySQLErrorPacket.getSqlState());
+                                }
+                                catch (final MySQLException ex) {
+                                    if (mysqlConn.getReturnCallbackToMainThread()) {
+                                        mysqlConn.getActivity().runOnUiThread(new Runnable() {
+                                            @Override
+                                            public void run()
+                                            {
+                                                iResultInterface.handleMySQLException(ex);
+                                            }
+                                        });
+                                    }
+                                    else {
+                                        iResultInterface.handleMySQLException(ex);
+                                    }
+                                }
+                                catch (final InvalidSQLPacketException e) {
+                                    if (mysqlConn.getReturnCallbackToMainThread()) {
+                                        mysqlConn.getActivity().runOnUiThread(new Runnable() {
+                                            @Override
+                                            public void run()
+                                            {
+                                                iResultInterface.handleInvalidSQLPacketException(e);
+                                            }
+                                        });
+                                    }
+                                    else {
+                                        iResultInterface.handleInvalidSQLPacketException(e);
+                                    }
+                                }
                             }
-                            catch (final MySQLException ex)
-                            {
+                            else {
+                                Log.d("Statement", "ABOUT TO CREATE COM_QUERY_RESPONSE");
+                                final COM_QueryResponse comQueryResponse = new COM_QueryResponse(Statement.this.mysqlConn);
                                 if (mysqlConn.getReturnCallbackToMainThread())
-                                {
-                                    mysqlConn.getActivity().runOnUiThread(new Runnable()
-                                    {
+                                    mysqlConn.getActivity().runOnUiThread(new Runnable() {
                                         @Override
                                         public void run()
                                         {
-                                            iResultInterface.handleMySQLException(ex);
+                                            iResultInterface.executionComplete(new ResultSet(comQueryResponse.getColumnDefinitions(), comQueryResponse.getRows()));
                                         }
                                     });
-                                }
-                                else
-                                {
-                                    iResultInterface.handleMySQLException(ex);
-                                }
-                            }
-                            catch (final InvalidSQLPacketException e) {
-                                if (mysqlConn.getReturnCallbackToMainThread())
-                                {
-                                    mysqlConn.getActivity().runOnUiThread(new Runnable()
-                                    {
-                                        @Override
-                                        public void run()
-                                        {
-                                            iResultInterface.handleInvalidSQLPacketException(e);
-                                        }
-                                    });
-                                }
-                                else
-                                {
-                                    iResultInterface.handleInvalidSQLPacketException(e);
+                                else {
+                                    iResultInterface.executionComplete(new ResultSet(comQueryResponse.getColumnDefinitions(), comQueryResponse.getRows()));
                                 }
                             }
                         }
-                        else {
-                            final COM_QueryResponse comQueryResponse = new COM_QueryResponse(Statement.this.mysqlConn);
-                            if (mysqlConn.getReturnCallbackToMainThread())
-                                mysqlConn.getActivity().runOnUiThread(new Runnable()
-                                {
+                        catch (final IOException ex) {
+                            if (mysqlConn.getReturnCallbackToMainThread()) {
+                                mysqlConn.getActivity().runOnUiThread(new Runnable() {
                                     @Override
                                     public void run()
                                     {
-                                        iResultInterface.executionComplete(new ResultSet(comQueryResponse.getColumnDefinitions(), comQueryResponse.getRows()));
+                                        iResultInterface.handleIOException(ex);
                                     }
                                 });
-                            else
-                            {
-                                iResultInterface.executionComplete(new ResultSet(comQueryResponse.getColumnDefinitions(), comQueryResponse.getRows()));
                             }
+                            else {
+                                iResultInterface.handleIOException(ex);
+                            }
+
                         }
                     }
-                    catch (final IOException ex)
+
+                    @Override
+                    public void handleException(final MySQLConnException ex)
                     {
-                        if (mysqlConn.getReturnCallbackToMainThread())
-                        {
-                            mysqlConn.getActivity().runOnUiThread(new Runnable()
-                            {
+                        if (mysqlConn.getReturnCallbackToMainThread()) {
+                            mysqlConn.getActivity().runOnUiThread(new Runnable() {
                                 @Override
                                 public void run()
                                 {
-                                    iResultInterface.handleIOException(ex);
+                                    iResultInterface.handleMySQLConnException(ex);
                                 }
                             });
                         }
-                        else
-                        {
-                            iResultInterface.handleIOException(ex);
+                        else {
+                            iResultInterface.handleMySQLConnException(ex);
                         }
 
                     }
-                }
-
-                @Override
-                public void handleException(final MySQLConnException ex)
-                {
-                    if (mysqlConn.getReturnCallbackToMainThread())
-                    {
-                        mysqlConn.getActivity().runOnUiThread(new Runnable()
-                        {
-                            @Override
-                            public void run()
-                            {
-                                iResultInterface.handleMySQLConnException(ex);
-                            }
-                        });
-                    }
-                    else
-                    {
-                        iResultInterface.handleMySQLConnException(ex);
-                    }
-
-                }
-            });
-            socketSender.execute(data);
-        }
-        catch (IOException ex)
-        {
-            iResultInterface.handleException(ex);
+                });
+                socketSender.execute(data);
+            }
+            catch (IOException ex) {
+                iResultInterface.handleException(ex);
+            }
         }
     }
 }

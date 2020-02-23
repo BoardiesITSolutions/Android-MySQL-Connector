@@ -4,6 +4,8 @@ import android.os.Build;
 import androidx.annotation.RequiresApi;
 import android.util.Log;
 
+import com.google.common.primitives.Bytes;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
@@ -12,6 +14,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.Semaphore;
 
 import javax.net.ssl.SSLSocket;
 
@@ -23,11 +26,18 @@ public class MySQLIO
     private BufferedInputStream sockStream;
     private byte[] fullData;
     private int currentBytesRead = 0;
+    private static final Semaphore mutex = new Semaphore(1);
+    private static boolean isDBConnected = false;
 
     public MySQLIO(Connection connection, Socket mysqlSock) throws IOException
     {
         this.connection = connection;
         this.sockStream = new BufferedInputStream(mysqlSock.getInputStream());
+    }
+
+    public void setIsDBConnected(boolean isDBConnected)
+    {
+        MySQLIO.isDBConnected = isDBConnected;
     }
 
     public void closeMySQLIO()
@@ -44,6 +54,12 @@ public class MySQLIO
             }
         }
     }
+
+    public Connection getConnection()
+    {
+        return this.connection;
+    }
+
 
     public void updateSocketStream(SSLSocket sslSocket) throws IOException
     {
@@ -67,29 +83,115 @@ public class MySQLIO
 
     private void getSocketData() throws IOException
     {
-        Log.d("MySQLIO", "Reading Socket Data");
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        Log.d("MySQLIO", "Created baos");
-        byte[] data = new byte[1024];
-        int bytesRead = -1;
-        while ((bytesRead = sockStream.read(data)) != -1) {
-            Log.d("MySQLIO", "Read from socket. Bytes Read: " + bytesRead);
-            baos.write(data, 0, bytesRead);
-            Log.d("MySQLIO", "BAOS written: Bytes Written: " + bytesRead);
-            if (bytesRead < 1024) {
-                Log.d("MySQLIO", "Breaking from loop");
-                break;
-            }
-        }
-        Log.d("MySQLIO", "Loop compleeted");
-        if (baos.size() == 0)
-        {
-            Log.d("MySQLIO", "No data in response");
-        }
-        fullData = baos.toByteArray();
-        Log.d("MySQLIO", "Full data written to: now size: " + fullData.length);
-        currentBytesRead = 0;
+        try {
+            mutex.acquire();
+            Log.d("MySQLIO", "Reading Socket Data");
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            Log.d("MySQLIO", "Created baos");
+            byte[] data = new byte[1024];
+            int bytesRead = -1;
+            while ((bytesRead = sockStream.read(data)) != -1) {
+                Log.d("MySQLIO", "Read from socket. Bytes Read: " + bytesRead);
+                baos.write(data, 0, bytesRead);
+                Log.d("MySQLIO", "BAOS written: Bytes Written: " + bytesRead);
+                if (bytesRead < 1024) {
+                    //Check the beginning of the packet, and see if the payload length matches
+                    //the current byte array length, if not, continue reading data
+                    byte[] tempFullData = baos.toByteArray();
+                    byte[] value = Arrays.copyOfRange(tempFullData, 0, 3);
+                    int expectedPayloadLength = fromByteArray(value);
+                    //Remove -4 and the first 4 bytes off length as the payload length doesn't include
+                    //the header information which is the sequence id and the payload length
+                    if (tempFullData.length - 4 < expectedPayloadLength) {
+                        if (fullData == null) {
+                            fullData = baos.toByteArray();
+                        }
+                        else {
 
+                            fullData = Bytes.concat(fullData, tempFullData);
+                            //byte[] newFullData = new byte[fullData.length + tempFullData.length];
+                            //System.arraycopy(tempFullData, 0, newFullData, fullData.length, newFullData.length);
+                            //fullData = newFullData;
+                        }
+                        baos.reset();
+                        Log.d("MySQLIO", "Less than 1024 bytes receives. Expected Payload Length: " + expectedPayloadLength + " Current Byte Array Length: " + tempFullData.length);
+
+                    }
+                    else {
+
+                        //Check if the 9th byte from the end is an OK or EOF packet, if not,
+                        //continue fetching data
+                        if (!isDBConnected)
+                        {
+                            break;
+                        }
+                        else {
+                            int packetType = tempFullData[tempFullData.length - 1];
+                            Log.d("MySQIO", "Less than 1024 Bytes Returned. Packet Type at end of array (end of array would have to be an OK: " + packetType);
+                            if (packetType == 0x00 || packetType == 0xfe)
+                            {
+                                break;
+                            }
+                            packetType = tempFullData[tempFullData.length-1 - 8];
+                            Log.d("MySQIO", "Less than 1024 bytes returned. Packet type -8 from the end of the array would need to be an EOF packet");
+                            if (packetType == 0xfe)
+                            {
+                                break;
+                            }
+                            //The 4th byte can also contain the OK or EOF so check this as well
+                            if (tempFullData[4] == 0x00 || tempFullData[4] == 0xfe)
+                            {
+                                break;
+                            }
+                                Log.d("MySQIO", "Packet Type at -8 was: " + packetType + " so continuing fetching data");
+                                //Print out each byte from the array so can determine how the data looks
+                                /*for (int i = 0; i < tempFullData.length; i++) {
+                                    Log.d("ByteData", "Index: " + i + " Value: " + tempFullData[i]);
+                                }*/
+
+                            }
+                        //If we get here continue fetching data
+
+                    }
+                }
+            }
+            Log.d("MySQLIO", "Loop completed");
+            if (baos.size() == 0) {
+                Log.d("MySQLIO", "No data in response");
+            }
+            //byte[] tempFullData = baos.toByteArray();
+
+            if (fullData == null)
+            {
+                fullData = baos.toByteArray();
+            }
+            else {
+                byte[] tempFullData = baos.toByteArray();
+                fullData = Bytes.concat(fullData, tempFullData);
+            }
+
+            Log.d("MySQLIO", "Get Socket Data Finished. Full Data Length: " + fullData.length);
+
+            /*if (fullData == null) {
+                fullData = baos.toByteArray();
+            }
+            else {
+                //byte[] newFullData = new byte[fullData.length + tempFullData.length];
+                //System.arraycopy(tempFullData, 0, newFullData, fullData.length, newFullData.length);
+                //fullData = newFullData;
+                fullData = Bytes.concat(fullData, tempFullData);
+                //System.arraycopy(tempFullData, fullData.length, fullData, fullData.length, tempFullData.length);
+            }*/
+            //fullData = baos.toByteArray();
+            Log.d("MySQLIO", "Full data written to: now size: " + fullData.length);
+            currentBytesRead = 0;
+            mutex.release();
+        }
+        catch (Exception ex)
+        {
+            Log.e("MySQIO", ex.toString());
+            mutex.release();
+        }
     }
 
     /**
@@ -111,13 +213,23 @@ public class MySQLIO
         reset(false);
     }
 
+
     public byte readCurrentByteWithoutShift()
     {
+        if (currentBytesRead >= this.fullData.length)
+        {
+            return 0;
+        }
         return this.fullData[currentBytesRead];
     }
 
     public String extractData(boolean returnAsHex, int length)
     {
+        if (currentBytesRead+length > fullData.length)
+        {
+            Log.d("MySQLIO", "About to pop extracting data");
+            return "";
+        }
         byte[] temp = Arrays.copyOfRange(fullData, currentBytesRead, currentBytesRead+length);
         if (returnAsHex)
         {
@@ -239,6 +351,10 @@ public class MySQLIO
 
     public int getLenEncodedInt()
     {
+        if (currentBytesRead >= this.fullData.length)
+        {
+            return 0;
+        }
         if ((this.fullData[this.currentBytesRead] & 0xff) < 0xfb)
         {
             int value = this.fullData[this.currentBytesRead];
@@ -253,23 +369,25 @@ public class MySQLIO
         }
         else if ((this.fullData[this.currentBytesRead] & 0xff) == 0xfc)
         {
+
             byte[] temp = Arrays.copyOfRange(this.fullData, this.currentBytesRead+1, this.currentBytesRead+3);
             this.shiftCurrentBytePosition(3);
             return readInt(temp);
         }
         else if ((this.fullData[this.currentBytesRead] & 0xff) == 0xfd)
         {
+
             byte[] temp = Arrays.copyOfRange(this.fullData, this.currentBytesRead+1, this.currentBytesRead+4);
             this.shiftCurrentBytePosition(4);
             return readLongInt(temp);
         }
         else if ((this.fullData[this.currentBytesRead] & 0xff) == 0xfe)
         {
+
             byte[] temp = Arrays.copyOfRange(this.fullData, this.currentBytesRead+1, this.currentBytesRead+9);
             this.shiftCurrentBytePosition(9);
             return (int)readLong(temp);
         }
-        System.out.println("MySQLIOExtraction: Returning -1");
         return -1;
     }
 
