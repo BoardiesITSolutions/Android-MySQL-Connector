@@ -172,6 +172,20 @@ public class COM_QueryResponse extends BasePacket
                     }
                     //We've got an EOF packet but there's actually more data so not a true EOF packet so shift 9 bytes
                     this.mysqlConn.getMysqlIO().shiftCurrentBytePosition(9);
+
+                    //Now that we've shifted past the EOF, see if this packet type is now an EOF as if there are no results you can
+                    //get two EOF packets together
+                    packetType = this.mysqlConn.getMysqlIO().readCurrentByteWithoutShift() & 0xff;
+                    if (Helpers.getMySQLPacketTypeFromIntWithoutShift(packetType) == Helpers.MYSQL_PACKET_TYPE.MYSQL_OK_PACKET ||
+                        Helpers.getMySQLPacketTypeFromIntWithoutShift(packetType) == Helpers.MYSQL_PACKET_TYPE.MYSQL_EOF_PACKET)
+                    {
+                        if ((this.mysqlConn.getMysqlIO().getSocketDataLength() - this.mysqlConn.getMysqlIO().getCurrentBytesRead()) < 9)
+                        {
+                            finishedProcessingColumns = true;
+                            row = null;
+                            break;
+                        }
+                    }
                 }
                 ColumnDefinition columnDefinition = columnDefinitions.get(currentColumn);
                 int lengthOfValue = this.mysqlConn.getMysqlIO().getLenEncodedInt();
