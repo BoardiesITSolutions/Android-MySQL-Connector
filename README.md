@@ -3,6 +3,8 @@
 <img src="https://ci.boardiesitsolutions.com/app/rest/builds/buildType:(id:AndroidMySQLConnector_Build)/statusIcon"/>
 </a>
 
+**Note:** When chosing a release you are better off using the tags appended with MySQL8 as these are more likely to work with other versions of MySQL (all the way down to 5.1) There has been numerous fixes in this branch and there is some preliminary support for MySQL8 servers as long as the server is using mysql_native_password instead of Sha2Caching. 
+
 # Introduction
 This is (as far as we are aware) the first and only native MySQL connector for Android.
 It connects directly to your database instead of relying on some sort of web service to
