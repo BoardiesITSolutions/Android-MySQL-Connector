@@ -36,6 +36,22 @@ public class MySQLRow
         throw new SQLColumnNotFoundException("'"+column+"' was not found in result set");
     }
 
+    public byte[] getBlob(String column) throws SQLColumnNotFoundException
+    {
+        Set set = this.columnAndRowValue.entrySet();
+        Iterator iterator = set.iterator();
+        while (iterator.hasNext())
+        {
+            Map.Entry entry = (Map.Entry)iterator.next();
+            ColumnDefinition col = (ColumnDefinition)entry.getKey();
+            if (col.getColumnName().equals(column))
+            {
+                return (byte[])entry.getValue();
+            }
+        }
+        throw new SQLColumnNotFoundException("'"+column+"' was not found in result set");
+    }
+
     public int getInt(String column) throws SQLColumnNotFoundException
     {
         String value = this.getString(column);

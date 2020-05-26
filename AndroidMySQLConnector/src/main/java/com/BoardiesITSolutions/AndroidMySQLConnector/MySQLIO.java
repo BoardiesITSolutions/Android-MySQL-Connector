@@ -134,12 +134,12 @@ public class MySQLIO
                             }
                             packetType = tempFullData[tempFullData.length-1 - 8];
                             Log.d("MySQIO", "Less than 1024 bytes returned. Packet type -8 from the end of the array would need to be an EOF packet");
-                            if (packetType == 0xfe)
+                            if (packetType == 0xfe || packetType == 0xff)
                             {
                                 break;
                             }
                             //The 4th byte can also contain the OK or EOF so check this as well
-                            if (tempFullData[4] == 0x00 || tempFullData[4] == 0xfe)
+                            if (tempFullData[4] == 0x00 || tempFullData[4] == 0xfe || tempFullData[4] == 0xff)
                             {
                                 break;
                             }
@@ -149,6 +149,10 @@ public class MySQLIO
                                     Log.d("ByteData", "Index: " + i + " Value: " + tempFullData[i]);
                                 }*/
 
+                                if (expectedPayloadLength == (tempFullData.length - 4))
+                                {
+                                    break;
+                                }
                             }
                         //If we get here continue fetching data
 
