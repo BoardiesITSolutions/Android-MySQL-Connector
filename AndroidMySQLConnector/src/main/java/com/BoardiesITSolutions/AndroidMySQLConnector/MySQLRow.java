@@ -15,6 +15,11 @@ public class MySQLRow
         this.columnAndRowValue = new HashMap<>();
     }
 
+    public int getSizeOfHash()
+    {
+        return this.columnAndRowValue.size();
+    }
+
     public void addRowValue(ColumnDefinition columnDefinition, String rowValue)
     {
         this.columnAndRowValue.put(columnDefinition, rowValue);

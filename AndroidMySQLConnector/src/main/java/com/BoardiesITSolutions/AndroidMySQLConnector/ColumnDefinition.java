@@ -1,5 +1,9 @@
 package com.BoardiesITSolutions.AndroidMySQLConnector;
 
+import java.math.BigInteger;
+
+import static java.lang.Math.abs;
+
 public class ColumnDefinition
 {
     public enum ColumnType {

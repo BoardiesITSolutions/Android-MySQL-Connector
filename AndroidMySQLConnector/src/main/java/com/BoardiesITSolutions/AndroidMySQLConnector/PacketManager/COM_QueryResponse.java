@@ -73,7 +73,7 @@ public class COM_QueryResponse extends BasePacket
 
             int columnLength = this.mysqlConn.getMysqlIO().fromByteArray((byte[])this.mysqlConn.getMysqlIO().extractData(4));
 
-            int columnType = (byte)this.mysqlConn.getMysqlIO().extractData(1);
+            int columnType = (byte)this.mysqlConn.getMysqlIO().extractData(1) & 0xff;
 
             int flags = this.mysqlConn.getMysqlIO().fromByteArray((byte[])this.mysqlConn.getMysqlIO().extractData(2));
 
@@ -155,7 +155,7 @@ public class COM_QueryResponse extends BasePacket
             for (; currentColumn < numberOfFields; currentColumn++)
             {
                 packetType = this.mysqlConn.getMysqlIO().readCurrentByteWithoutShift() & 0xff;
-                if (Helpers.getMySQLPacketTypeFromIntWithoutShift(packetType) == Helpers.MYSQL_PACKET_TYPE.MYSQL_OK_PACKET ||
+                if ((numberOfFields == currentColumn-1) &&  Helpers.getMySQLPacketTypeFromIntWithoutShift(packetType) == Helpers.MYSQL_PACKET_TYPE.MYSQL_OK_PACKET ||
                         Helpers.getMySQLPacketTypeFromIntWithoutShift(packetType) == Helpers.MYSQL_PACKET_TYPE.MYSQL_EOF_PACKET)
                 {
 
@@ -164,10 +164,14 @@ public class COM_QueryResponse extends BasePacket
                         //We've got an EOF packet and the remaining data in the socket data is less than 9 so this is a true 0xFE.
                         //You sometimes get an 0xFE packet when its actually a len encoded integer. As this is a true EOF packet
                         //we can break from the loop as we have everything we need
-                        finishedProcessingColumns = true;
+
                         //We've created a row object in case we needed it, but as we've detected as an EOF packet,
                         //set the row to null so it doesn't get added to to the resultset.
-                        row = null;
+                        if (row.getSizeOfHash() == 0)
+                        {
+                            row = null;
+                            finishedProcessingColumns = true;
+                        }
                         break;
                     }
                     //We've got an EOF packet but there's actually more data so not a true EOF packet so shift 9 bytes
@@ -181,8 +185,11 @@ public class COM_QueryResponse extends BasePacket
                     {
                         if ((this.mysqlConn.getMysqlIO().getSocketDataLength() - this.mysqlConn.getMysqlIO().getCurrentBytesRead()) < 9)
                         {
-                            finishedProcessingColumns = true;
-                            row = null;
+                            if (row.getSizeOfHash() == 0)
+                            {
+                                row = null;
+                                finishedProcessingColumns = true;
+                            }
                             break;
                         }
                     }
