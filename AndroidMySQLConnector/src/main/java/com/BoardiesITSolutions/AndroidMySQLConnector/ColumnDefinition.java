@@ -1,7 +1,5 @@
 package com.BoardiesITSolutions.AndroidMySQLConnector;
 
-import java.math.BigInteger;
-
 import static java.lang.Math.abs;
 
 public class ColumnDefinition
@@ -9,7 +7,7 @@ public class ColumnDefinition
     public enum ColumnType {
         DECIMAL, TINY, SHORT, LONG, FLOAT, DOUBLE, NULL, TIMESTAMP, LONGLONG, INT24, DATE, TIME, DATETIME, YEAR,
         NEWDATE, VARCHAR, BIT, TIMESTAMP2, DATETIME2, TIME2, NEWDECIMAL, ENUM, SET, TINY_BLOB, MEDIUM_BLOB,
-        LONG_BLOG, BLOG, VAR_STRING, STRING, GEOMETRY
+        LONG_BLOB, BLOB, VAR_STRING, STRING, GEOMETRY
     }
 
     /**
@@ -155,10 +153,10 @@ public class ColumnDefinition
                 this.columnType = ColumnType.MEDIUM_BLOB;
                 break;
             case 0xfb:
-                this.columnType = ColumnType.LONG_BLOG;
+                this.columnType = ColumnType.LONG_BLOB;
                 break;
             case 0xfc:
-                this.columnType = ColumnType.BLOG;
+                this.columnType = ColumnType.BLOB;
                 break;
             case 0xfd:
                 this.columnType = ColumnType.VAR_STRING;

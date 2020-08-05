@@ -8,7 +8,7 @@ import java.util.Set;
 
 public class MySQLRow
 {
-    private HashMap<ColumnDefinition, String> columnAndRowValue;
+    private HashMap<ColumnDefinition, Object> columnAndRowValue;
 
     public MySQLRow()
     {
@@ -20,7 +20,7 @@ public class MySQLRow
         return this.columnAndRowValue.size();
     }
 
-    public void addRowValue(ColumnDefinition columnDefinition, String rowValue)
+    public void addRowValue(ColumnDefinition columnDefinition, Object rowValue)
     {
         this.columnAndRowValue.put(columnDefinition, rowValue);
     }
@@ -51,11 +51,20 @@ public class MySQLRow
             ColumnDefinition col = (ColumnDefinition)entry.getKey();
             if (col.getColumnName().equals(column))
             {
-                return (byte[])entry.getValue();
+                if (entry.getValue() instanceof String)
+                {
+                    return (byte[])entry.getValue().toString().getBytes();
+                }
+                else
+                {
+                    return (byte[]) entry.getValue();
+                }
             }
         }
         throw new SQLColumnNotFoundException("'"+column+"' was not found in result set");
     }
+
+
 
     public int getInt(String column) throws SQLColumnNotFoundException
     {
