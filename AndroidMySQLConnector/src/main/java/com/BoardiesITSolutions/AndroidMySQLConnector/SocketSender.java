@@ -59,9 +59,12 @@ public class SocketSender extends AsyncTask<byte[], Void, Void>
         catch (IOException | InterruptedException ex)
         {
             mutex.release();
-            Log.e(TAG, ex.toString());
+            if (this.mysqlConn.getiConnectionInterface() != null && ex instanceof IOException)
+            {
+                this.mysqlConn.getiConnectionInterface().handleIOException((IOException)ex);
+            }
+            Log.e(TAG, "IOException: " +  ex.toString());
         }
-
         return null;
     }
 

@@ -130,6 +130,11 @@ public class Connection
         this.connect();
     }
 
+    public IConnectionInterface getiConnectionInterface()
+    {
+        return this.iConnectionInterface;
+    }
+
     public Charset getCharset() {
         //If the charset hasn't been set yet - probably because we haven't yet read the server
         //language from the welcome packet, default it to uft-8
