@@ -20,18 +20,18 @@ else
 }
 
 archivesBaseName="AndroidMySQLConnector"
-version '0.45'
+version '0.46'
 group 'com.BoardiesITSolutions'
 
 
 android {
-    compileSdkVersion 29
+    compileSdkVersion 30
     defaultConfig {
         //applicationId "com.BoardiesITSolutions.AndroidMySQLConnector"
         minSdkVersion 19
-        targetSdkVersion 29
-        versionCode 33
-        versionName "0.45"
+        targetSdkVersion 30
+        versionCode 34
+        versionName "0.46"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -63,6 +63,7 @@ android {
                 def outputFile = output.outputFile
                 if (outputFile != null && outputFile.name.endsWith('.aar')) {
                     def fileName = "${archivesBaseName}-${version}.aar"
+                    //def fileName = "${archivesBaseName}-debug.aar"
                     //output.outputFile = new File(outputFile.parent, fileName)
                     outputFileName = fileName
                 }
@@ -83,8 +84,8 @@ android {
 }
 
 def getArtifactFullPath() {
-    //return ".//build/outputs/aar/${archivesBaseName}-${project.version}.aar"
-    return ".//build/outputs/aar/${archivesBaseName}-debug.aar"
+    return ".//build/outputs/aar/${archivesBaseName}-${project.version}.aar"
+    //return ".//build/outputs/aar/${archivesBaseName}-debug.aar"
 }
 
 dependencies {

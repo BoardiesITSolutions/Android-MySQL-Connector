@@ -1,5 +1,8 @@
 package com.BoardiesITSolutions.AndroidMySQLConnector;
 
+import com.BoardiesITSolutions.AndroidMySQLConnector.Exceptions.MySQLConnException;
+import com.BoardiesITSolutions.AndroidMySQLConnector.Exceptions.MySQLException;
+
 import java.io.IOException;
 
 public class Helpers
@@ -11,10 +14,14 @@ public class Helpers
      * @param socketData The full socket data byte array that should be checked
      * @return MYSQL_PACKET_TYPE
      */
-    public static MYSQL_PACKET_TYPE getMySQLPacketType(byte[] socketData) throws IOException
+    public static MYSQL_PACKET_TYPE getMySQLPacketType(byte[] socketData) throws IOException, MySQLConnException
     {
         //The packet type to check is the 4th byte, the first 3 bytes is the packet length,
         //the 4th byte is the MySQL sequence number and the 5th byte is the packet type
+        if (socketData == null)
+        {
+            throw new MySQLConnException("Empty socket data was returned", 0, 0);
+        }
         if (socketData.length < 4)
         {
             IOException exception = new IOException("Unexpected SQL Packet Size. Got Size: " + socketData.length);

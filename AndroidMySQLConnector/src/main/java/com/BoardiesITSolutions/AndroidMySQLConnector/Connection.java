@@ -714,6 +714,23 @@ public class Connection
                                 iConnectionInterface.handleInvalidSQLPacketException(ex);
                             }
                         }
+                        catch (final MySQLConnException ex) {
+                            Log.e("MySQLConnection", ex.toString());
+                            if (getReturnCallbackToMainThread())
+                            {
+                                getActivity().runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run()
+                                    {
+                                        iConnectionInterface.handleMySQLConnException(ex);
+                                    }
+                                });
+                            }
+                            else
+                            {
+                                iConnectionInterface.handleMySQLConnException(ex);
+                            }
+                        }
                     }
                 }
 

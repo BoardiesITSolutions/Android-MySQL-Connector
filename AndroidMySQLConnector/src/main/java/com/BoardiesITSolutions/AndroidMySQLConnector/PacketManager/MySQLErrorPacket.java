@@ -5,6 +5,7 @@ import androidx.annotation.RequiresApi;
 
 import com.BoardiesITSolutions.AndroidMySQLConnector.Connection;
 import com.BoardiesITSolutions.AndroidMySQLConnector.Exceptions.InvalidSQLPacketException;
+import com.BoardiesITSolutions.AndroidMySQLConnector.Exceptions.MySQLConnException;
 import com.BoardiesITSolutions.AndroidMySQLConnector.Helpers;
 
 import java.io.ByteArrayOutputStream;
@@ -17,7 +18,7 @@ public class MySQLErrorPacket extends BasePacket
     private String errorMsg;
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-    public MySQLErrorPacket(Connection mysqlConn) throws IOException, InvalidSQLPacketException
+    public MySQLErrorPacket(Connection mysqlConn) throws IOException, InvalidSQLPacketException, MySQLConnException
     {
         super(mysqlConn);
         this.processPacket();
@@ -37,7 +38,7 @@ public class MySQLErrorPacket extends BasePacket
     }
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-    private void processPacket() throws IOException, InvalidSQLPacketException
+    private void processPacket() throws IOException, InvalidSQLPacketException, MySQLConnException
     {
         this.setPacketLength(this.mysqlConn.getMysqlIO().fromByteArray((byte[]) this.mysqlConn.getMysqlIO().extractData(3)));
 

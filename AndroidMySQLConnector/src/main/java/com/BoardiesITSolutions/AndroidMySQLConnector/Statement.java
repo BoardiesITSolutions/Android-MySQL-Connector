@@ -140,6 +140,23 @@ public class Statement
                         }
                         mutex.release();
                     }
+                    catch (final MySQLConnException ex)
+                    {
+                        if (mysqlConn.getReturnCallbackToMainThread()) {
+                            mysqlConn.getActivity().runOnUiThread(new Runnable() {
+                                @Override
+                                public void run()
+                                {
+                                    iConnectionInterface.handleMySQLConnException(ex);
+                                }
+                            });
+                        }
+                        else
+                        {
+                            iConnectionInterface.handleMySQLConnException(ex);
+                        }
+                        mutex.release();
+                    }
                 }
 
                 @Override
@@ -251,7 +268,23 @@ public class Statement
                             else {
                                 iResultInterface.handleIOException(ex);
                             }
-
+                        }
+                        catch (final MySQLConnException ex)
+                        {
+                            if (mysqlConn.getReturnCallbackToMainThread())
+                            {
+                                mysqlConn.getActivity().runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run()
+                                    {
+                                        iResultInterface.handleMySQLConnException(ex);
+                                    }
+                                });
+                            }
+                            else
+                            {
+                                iResultInterface.handleMySQLConnException(ex);
+                            }
                         }
                     }
 

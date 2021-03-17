@@ -5,6 +5,7 @@ import android.util.Log;
 
 import com.BoardiesITSolutions.AndroidMySQLConnector.Connection;
 import com.BoardiesITSolutions.AndroidMySQLConnector.Exceptions.InvalidSQLPacketException;
+import com.BoardiesITSolutions.AndroidMySQLConnector.Exceptions.MySQLConnException;
 import com.BoardiesITSolutions.AndroidMySQLConnector.Helpers;
 
 import java.io.ByteArrayOutputStream;
@@ -15,7 +16,7 @@ public class MySQLOKPacket extends BasePacket
     private int affectedRows = 0;
     private int lastInsertID = 0;
 
-    public MySQLOKPacket(Connection mysqlConn) throws IOException, InvalidSQLPacketException
+    public MySQLOKPacket(Connection mysqlConn) throws IOException, InvalidSQLPacketException, MySQLConnException
     {
         super(mysqlConn);
         processPacket();
@@ -31,7 +32,7 @@ public class MySQLOKPacket extends BasePacket
         return this.lastInsertID;
     }
 
-    private void processPacket() throws IOException, InvalidSQLPacketException
+    private void processPacket() throws IOException, InvalidSQLPacketException, MySQLConnException
     {
         this.setPacketLength(this.mysqlConn.getMysqlIO().fromByteArray((byte[]) this.mysqlConn.getMysqlIO().extractData(3)));
         this.setPacketSequenceNumber((byte)this.mysqlConn.getMysqlIO().extractData(1));
