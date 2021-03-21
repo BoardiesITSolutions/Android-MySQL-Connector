@@ -21,7 +21,6 @@ public class Statement
 {
     Connection mysqlConn;
     int affectedRows = 0;
-    private static final Semaphore mutex = new Semaphore(1);
 
     public Statement(Connection mysqlConn)
     {
@@ -42,7 +41,6 @@ public class Statement
     public void execute(String query, final IConnectionInterface iConnectionInterface)
     {
         try {
-            mutex.acquire();
             this.mysqlConn.resetPacketSequenceNumber(true);
             COM_Query comQuery = new COM_Query(this.mysqlConn, COM_Query.COM_QUERY, query);
             byte[] data = comQuery.getPacketData().toByteArray();
@@ -123,7 +121,6 @@ public class Statement
                                 }
                             }
                         }
-                        mutex.release();
                     }
                     catch (final IOException ex) {
                         if (mysqlConn.getReturnCallbackToMainThread()) {
@@ -138,7 +135,6 @@ public class Statement
                         else {
                             iConnectionInterface.handleIOException(ex);
                         }
-                        mutex.release();
                     }
                     catch (final MySQLConnException ex)
                     {
@@ -155,7 +151,6 @@ public class Statement
                         {
                             iConnectionInterface.handleMySQLConnException(ex);
                         }
-                        mutex.release();
                     }
                 }
 
@@ -174,32 +169,30 @@ public class Statement
                     else {
                         iConnectionInterface.handleMySQLConnException(ex);
                     }
-                    mutex.release();
                 }
             });
 
             socketSender.execute(data);
         }
         catch (IOException ex) {
+            Log.e("Statement", "IOException: " + ex.toString());
             iConnectionInterface.handleIOException(ex);
-            mutex.release();
         }
         catch (Exception ex)
         {
-            Log.e("Statement", ex.toString());
-            mutex.release();
+            Log.e("Statement", "Exception: " + ex.toString());
+            iConnectionInterface.handleException(ex);
         }
     }
 
     public void executeQuery(String query, final IResultInterface iResultInterface)
     {
-        synchronized (this.mysqlConn) {
+
             try {
                 this.mysqlConn.resetPacketSequenceNumber(true);
 
                 COM_Query comQuery = new COM_Query(this.mysqlConn, COM_Query.COM_QUERY, query);
                 byte[] data = comQuery.getPacketData().toByteArray();
-
                 SocketSender socketSender = new SocketSender(this.mysqlConn, new IIntConnectionInterface() {
                     @Override
                     public void socketDataSent()
@@ -240,7 +233,6 @@ public class Statement
                                 }
                             }
                             else {
-                                Log.d("Statement", "ABOUT TO CREATE COM_QUERY_RESPONSE");
                                 final COM_QueryResponse comQueryResponse = new COM_QueryResponse(Statement.this.mysqlConn);
                                 if (mysqlConn.getReturnCallbackToMainThread())
                                     mysqlConn.getActivity().runOnUiThread(new Runnable() {
@@ -311,6 +303,5 @@ public class Statement
             catch (IOException ex) {
                 iResultInterface.handleException(ex);
             }
-        }
     }
 }

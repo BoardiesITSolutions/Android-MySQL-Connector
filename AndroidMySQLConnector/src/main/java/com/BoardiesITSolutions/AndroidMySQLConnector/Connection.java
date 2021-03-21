@@ -627,7 +627,7 @@ public class Connection
                 @Override
                 public void socketDataSent()
                 {
-                    synchronized (mysqlIO.getConnection()) {
+                    //synchronized (mysqlIO.getConnection()) {
                         Log.d("Connection", "Socket Data Sent");
                         try {
                             Helpers.MYSQL_PACKET_TYPE mysqlPacketType = Helpers.getMySQLPacketType(Connection.this.mysqlIO.getSocketByteArray());
@@ -732,7 +732,7 @@ public class Connection
                             }
                         }
                     }
-                }
+                //}
 
                 @Override
                 public void handleException(final MySQLConnException ex)
@@ -806,10 +806,12 @@ public class Connection
 
     public void resetPacketSequenceNumber()
     {
+        Log.d("Connection", "Resetting packet sequence number");
         this.packetSequenceNumber = 1;
     }
     public void resetPacketSequenceNumber(boolean resetToZero)
     {
+        Log.d("Connection", "Resetting packet sequence number");
         if (resetToZero)
         {
             this.packetSequenceNumber = 0;
@@ -828,9 +830,9 @@ public class Connection
 
     public Statement createStatement()
     {
-        synchronized (this.mysqlIO.getConnection()) {
+        //synchronized (this.mysqlIO.getConnection()) {
             return new Statement(this);
-        }
+        //}
     }
 
     private void parseVersionNumber()

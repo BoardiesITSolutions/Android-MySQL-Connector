@@ -26,7 +26,6 @@ public class MySQLIO
     private BufferedInputStream sockStream;
     private byte[] fullData;
     private int currentBytesRead = 0;
-    private static final Semaphore mutex = new Semaphore(1);
     private static boolean isDBConnected = false;
 
     public MySQLIO(Connection connection, Socket mysqlSock) throws IOException
@@ -84,7 +83,6 @@ public class MySQLIO
     private void getSocketData() throws IOException
     {
         try {
-            mutex.acquire();
             Log.d("MySQLIO", "Reading Socket Data");
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             Log.d("MySQLIO", "Created baos");
@@ -109,9 +107,6 @@ public class MySQLIO
                         else {
 
                             fullData = Bytes.concat(fullData, tempFullData);
-                            //byte[] newFullData = new byte[fullData.length + tempFullData.length];
-                            //System.arraycopy(tempFullData, 0, newFullData, fullData.length, newFullData.length);
-                            //fullData = newFullData;
                         }
                         baos.reset();
                         Log.d("MySQLIO", "Less than 1024 bytes receives. Expected Payload Length: " + expectedPayloadLength + " Current Byte Array Length: " + tempFullData.length);
@@ -144,10 +139,6 @@ public class MySQLIO
                                 break;
                             }
                                 Log.d("MySQIO", "Packet Type at -8 was: " + packetType + " so continuing fetching data");
-                                //Print out each byte from the array so can determine how the data looks
-                                /*for (int i = 0; i < tempFullData.length; i++) {
-                                    Log.d("ByteData", "Index: " + i + " Value: " + tempFullData[i]);
-                                }*/
 
                                 if (expectedPayloadLength == (tempFullData.length - 4))
                                 {
@@ -176,25 +167,12 @@ public class MySQLIO
 
             Log.d("MySQLIO", "Get Socket Data Finished. Full Data Length: " + fullData.length);
 
-            /*if (fullData == null) {
-                fullData = baos.toByteArray();
-            }
-            else {
-                //byte[] newFullData = new byte[fullData.length + tempFullData.length];
-                //System.arraycopy(tempFullData, 0, newFullData, fullData.length, newFullData.length);
-                //fullData = newFullData;
-                fullData = Bytes.concat(fullData, tempFullData);
-                //System.arraycopy(tempFullData, fullData.length, fullData, fullData.length, tempFullData.length);
-            }*/
-            //fullData = baos.toByteArray();
             Log.d("MySQLIO", "Full data written to: now size: " + fullData.length);
             currentBytesRead = 0;
-            mutex.release();
         }
         catch (Exception ex)
         {
             Log.e("MySQIO", ex.toString());
-            mutex.release();
         }
     }
 

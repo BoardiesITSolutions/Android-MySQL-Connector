@@ -14,7 +14,6 @@ public class SocketSender extends AsyncTask<byte[], Void, Void>
     IIntConnectionInterface iIntConnectionInterface;
     Connection mysqlConn;
     private static final String TAG = "SocketSender";
-    private Semaphore mutex = new Semaphore(1);
 
     public SocketSender(Connection mysqlConn, IIntConnectionInterface iIntConnectionInterface)
     {
@@ -27,7 +26,6 @@ public class SocketSender extends AsyncTask<byte[], Void, Void>
     {
         try
         {
-            mutex.acquire();
             byte[] byteArray = bytes[0];
             if (byteArray == null)
             {
@@ -54,11 +52,10 @@ public class SocketSender extends AsyncTask<byte[], Void, Void>
             }
             this.mysqlConn.getMysqlIO().reset();
             iIntConnectionInterface.socketDataSent();
-            mutex.release();
+
         }
-        catch (IOException | InterruptedException ex)
+        catch (IOException ex)
         {
-            mutex.release();
             if (this.mysqlConn.getiConnectionInterface() != null && ex instanceof IOException)
             {
                 this.mysqlConn.getiConnectionInterface().handleIOException((IOException)ex);
