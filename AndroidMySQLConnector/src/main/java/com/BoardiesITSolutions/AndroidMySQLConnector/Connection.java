@@ -40,6 +40,8 @@ public class Connection
     private String database;
     private int port = 3306;
 
+    private int connectionTimeout = 30;
+
     //Connection Details
     private boolean isMariaDB = false;
     private int majorVersion;
@@ -128,6 +130,25 @@ public class Connection
         this.port = port;
 
         this.connect();
+    }
+
+    /**
+     * Set the connection timeout for the database connection. If not
+     * set will default to 30 seconds
+     * @param seconds
+     */
+    public void setConnectionTimeout(int seconds)
+    {
+        this.connectionTimeout = seconds;
+    }
+
+    /**
+     * Return the connection timeout in seconds
+     * @return
+     */
+    public int getConnectionTimeout()
+    {
+        return this.connectionTimeout;
     }
 
     public IConnectionInterface getiConnectionInterface()

@@ -64,6 +64,14 @@ To connect to a MySQL server you first need to create the MySQL Connection objec
 Connection  mysqlConnection = new Connection("<Hostname>", "<Username>", "<Password>", <Port>, "<Database>", new IConnectionInterface()
 ```
 
+Once your connection object has been created you can then optionally call the following method `returnCallbackToMainThread(true, MainActivity.this);`
+if you want any callback whether database connection or database queries, the call back to be executed via the UI thread. This can be useful if the callback needs to update the UI. By default
+this will be false, so the callback will be executed within the same thread as the database connection activity, and if you then attempt to update UI without switching to the UI thread
+yourself, you will receive an Android exception. 
+
+Also optionally, when the connection object has been created you can call the method `connection.setConnectionTimeout(5);` to override the default connection timeout
+of the database network activity. In this example the timeout will be 5 seconds, by default, the connection timeout will be 30 seconds. 
+
 In the above example, <database> is an optional parameter. By setting this, when the connection is established, the database name will be the default
 database used. The IConnectionInterface parameter handles connection specific events, such as successfully connected or exception handlers.
 
