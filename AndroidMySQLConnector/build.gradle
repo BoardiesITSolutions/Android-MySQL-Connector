@@ -30,7 +30,7 @@ android {
         //applicationId "com.BoardiesITSolutions.AndroidMySQLConnector"
         minSdkVersion 19
         targetSdkVersion 30
-        versionCode 36
+        versionCode 37
         versionName "0.48"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
