@@ -20,7 +20,7 @@ else
 }
 
 archivesBaseName="AndroidMySQLConnector"
-version '0.48'
+version '0.49'
 group 'com.BoardiesITSolutions'
 
 
@@ -30,8 +30,6 @@ android {
         //applicationId "com.BoardiesITSolutions.AndroidMySQLConnector"
         minSdkVersion 19
         targetSdkVersion 30
-        versionCode 37
-        versionName "0.48"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -81,6 +79,7 @@ android {
             url "https://maven.google.com"
         }
     }
+    namespace 'com.BoardiesITSolutions.AndroidMySQLConnector'
 }
 
 def getArtifactFullPath() {

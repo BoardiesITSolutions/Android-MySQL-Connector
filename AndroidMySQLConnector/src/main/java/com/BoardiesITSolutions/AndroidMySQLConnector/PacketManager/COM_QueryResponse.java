@@ -48,42 +48,29 @@ public class COM_QueryResponse extends BasePacket
         for (int currentColumnCount = 0; currentColumnCount < numberOfFields; currentColumnCount++)
         {
             this.mysqlConn.getMysqlIO().shiftCurrentBytePosition(4);
-
             int catalogLength = (byte)this.mysqlConn.getMysqlIO().getLenEncodedInt();
             String catalog = this.mysqlConn.getMysqlIO().extractData(false, catalogLength);
-
             int databaseLength = (byte)this.mysqlConn.getMysqlIO().getLenEncodedInt();
             String database = this.mysqlConn.getMysqlIO().extractData(false, databaseLength);
 
             int tableLength = (byte)this.mysqlConn.getMysqlIO().getLenEncodedInt();
             String table = this.mysqlConn.getMysqlIO().extractData(false, tableLength);
-
             int origTableLength = (byte)this.mysqlConn.getMysqlIO().getLenEncodedInt();
             String origTable = this.mysqlConn.getMysqlIO().extractData(false, origTableLength);
-
             int columnNameLength = (byte)this.mysqlConn.getMysqlIO().getLenEncodedInt();
             String columnName = this.mysqlConn.getMysqlIO().extractData(false, columnNameLength);
-
             int origColumnNameLength = (byte)this.mysqlConn.getMysqlIO().getLenEncodedInt();
             String origColumnName = this.mysqlConn.getMysqlIO().extractData(false, origColumnNameLength);
-
             int nextLength = (byte)this.mysqlConn.getMysqlIO().getLenEncodedInt();
-
             int characterSet = this.mysqlConn.getMysqlIO().fromByteArray((byte[])this.mysqlConn.getMysqlIO().extractData(2));
-
             int columnLength = this.mysqlConn.getMysqlIO().fromByteArray((byte[])this.mysqlConn.getMysqlIO().extractData(4));
-
             int columnType = (byte)this.mysqlConn.getMysqlIO().extractData(1) & 0xff;
-
             int flags = this.mysqlConn.getMysqlIO().fromByteArray((byte[])this.mysqlConn.getMysqlIO().extractData(2));
-
             int decimals = (byte)this.mysqlConn.getMysqlIO().extractData(1);
-
 
             //2 Byte NULL fillers so shift on another 2
             this.mysqlConn.getMysqlIO().shiftCurrentBytePosition(2);
             //break;
-
             this.columnDefinitions.add(new ColumnDefinition(catalog, database, table, columnName, characterSet,
                     columnType, flags, decimals));
         }
@@ -92,6 +79,7 @@ public class COM_QueryResponse extends BasePacket
         //it in case we need it - don't think we do though!
         if (this.mysqlConn.isConnectedVersionLessThan(5,5,60) && !this.mysqlConn.isMariaDB())
         {
+            Log.d("COMQueryResponse", "Reading extra un-used data");
             int packetLength = this.mysqlConn.getMysqlIO().fromByteArray((byte[]) this.mysqlConn.getMysqlIO().extractData(3));
             int packetNumber = (byte) this.mysqlConn.getMysqlIO().extractData(1);
             int eofMarker = (byte) this.mysqlConn.getMysqlIO().extractData(1);

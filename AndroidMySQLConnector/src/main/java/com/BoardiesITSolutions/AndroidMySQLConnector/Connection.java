@@ -70,25 +70,37 @@ public class Connection
     public static final int CLIENT_MULTI_SET = 0x00010000;
     public static final int CLIENT_SSL = 0x00000800;
     public static final int CLIENT_LONG_PASSWORD = 0x00000001;
-    public static final int CLIENT_MULTI_STATEMENTS = 0x00010000;
+    //public static final int CLIENT_MULTI_STATEMENTS = 0x00010000;
     public static final int CLIENT_SECURE_CONNECTION = 0x00008000;
     public static final int CLIENT_CONNECT_ATTRS = 0x00100000;
     public static final int CLIENT_CONNECT_WITH_DB = 0x00000008;
     public static final int CLIENT_PROTOCOL_41 = 0x00000200;
     public static final int CLIENT_COMPRESS = 0x00000020;
+
+    public static final int CLIENT_MULTI_STATEMENTS = 1 << 16;
+    public static final int MULTI_RESULTS = 1 << 17;
+    public static final int CLIENT_MULTI_RESULTS = 1 << 17;
     public static final int CLIENT_NO_SCHEMA = 0x00000010;
     public static final int CLIENT_IGNORE_SIGPIPE = 0x00001000;
     public static final int CLIENT_INTERACTIVE = 0x00000400;
     public static final int CLIENT_ODBC = 0x00000040;
     public static final int CLIENT_IGNORE_SPACE = 0x00000100;
     public static final int CLIENT_PS_MULTI_RESULTS = 0x00040000;
-    public static final int CLIENT_CAN_HANDLE_EXPIRED_PASSWORDS = 0x00400000;
-    public static final int CLIENT_SESSION_TRACK = 0x00800000;
-
-
-    public static final int MULTI_RESULTS = 1 << 17;
+    public static final int CLIENT_CAN_HANDLE_EXPIRED_PASSWORDS = 1 << 22;
+    public static final int CLIENT_SESSION_TRACK = 1 << 23;
     public static final int DEPRECATE_EOF = 1 << 24;
     public static final int CLIENT_OPTIONAL_RESULTSET_METADATA = 1 << 25;
+    public static final int CLIENT_ZSTD_COMPRESSION_ALGORITHM = 1 << 26;
+    public static final int CLIENT_QUERY_ATTRIBUTES = 1 << 27;
+    public static final int MULTI_FACTOR_AUTHENTICATION = 1 << 28;
+
+
+
+
+
+
+    /** ADDED OPTION */
+
 
     //Character Sets
     private final int LATIN1_SWEDISH_CI = 0x08;
@@ -416,16 +428,66 @@ public class Connection
                 clientCapabilities &= ~CLIENT_COMPRESS;
             }
 
+            if ((Connection.this.serverCapabilities & CLIENT_ZSTD_COMPRESSION_ALGORITHM) == CLIENT_ZSTD_COMPRESSION_ALGORITHM)
+            {
+                Log.d("Connection", "Disabling ztsd compression");
+                clientCapabilities &= ~CLIENT_ZSTD_COMPRESSION_ALGORITHM;
+            }
+
+            if ((Connection.this.serverCapabilities & CLIENT_CAN_HANDLE_EXPIRED_PASSWORDS) == CLIENT_CAN_HANDLE_EXPIRED_PASSWORDS)
+            {
+                Log.d("Connection", "Disabling CLIENT_CAN_HANDLE_EXPIRED_PASSWORDS");
+                clientCapabilities &= ~CLIENT_CAN_HANDLE_EXPIRED_PASSWORDS;
+            }
+
+            if ((Connection.this.serverCapabilities & CLIENT_LONG_PASSWORD) == CLIENT_LONG_PASSWORD)
+            {
+                Log.d("Connection", "Disabling CLIENT_LONG_PASSWORD");
+                clientCapabilities &= ~CLIENT_LONG_PASSWORD;
+            }
+
+            if ((Connection.this.serverCapabilities & CLIENT_MULTI_STATEMENTS) == CLIENT_MULTI_STATEMENTS)
+            {
+                Log.d("Connection", "Disabling CLIENT_MULTI_STATEMENTS");
+                clientCapabilities &= ~CLIENT_MULTI_STATEMENTS;
+            }
+            if ((Connection.this.serverCapabilities & MULTI_FACTOR_AUTHENTICATION) == MULTI_FACTOR_AUTHENTICATION)
+            {
+                Log.d("Connection", "Disabling MULTI_FACTOR_AUTHENTICATION");
+                clientCapabilities &= ~MULTI_FACTOR_AUTHENTICATION;
+            }
+
+            if ((Connection.this.serverCapabilities & CLIENT_MULTI_RESULTS) == CLIENT_MULTI_RESULTS)
+            {
+                Log.d("Connection", "Disabling CLIENT_MULTI_RESULTS");
+                clientCapabilities &= ~CLIENT_MULTI_RESULTS;
+            }
+
+            if ((Connection.this.serverCapabilities & CLIENT_SESSION_TRACK) == CLIENT_SESSION_TRACK)
+            {
+                Log.d("Connection", "Disabling CLIENT_SESSION_TRACK");
+                clientCapabilities &= ~CLIENT_SESSION_TRACK;
+            }
+
+            if ((Connection.this.serverCapabilities & CLIENT_QUERY_ATTRIBUTES) == CLIENT_QUERY_ATTRIBUTES)
+            {
+                Log.d("Connection", "Disabling CLIENT_QUERY_ATTRIBUTES");
+                clientCapabilities &= ~CLIENT_QUERY_ATTRIBUTES;
+            }
+
+            if ((Connection.this.serverCapabilities & DEPRECATE_EOF) == DEPRECATE_EOF)
+            {
+                Log.d("MainActivity", "Disabled DEPRECATE_EOF");
+                clientCapabilities &= ~DEPRECATE_EOF;
+            }
+
             //If MySQL 8 turn off can accept expired password
             if (this.getMajorVersion() >= 8)
             {
                 clientCapabilities &= ~CLIENT_OPTIONAL_RESULTSET_METADATA;
                 clientCapabilities &= ~CLIENT_SSL;
-
             }
 
-            clientCapabilities &= ~DEPRECATE_EOF;
-            clientCapabilities &= ~MULTI_RESULTS;
 
             //Check if the server is set to don't allow database.table, if so unset it so we can
             //Having this enabled means SHOW TABLES and SHOW DATABASES can't be executed as it will only
