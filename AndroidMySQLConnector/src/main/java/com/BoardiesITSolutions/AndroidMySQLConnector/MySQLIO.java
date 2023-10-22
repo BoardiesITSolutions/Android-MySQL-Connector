@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Semaphore;
+import java.util.logging.Logger;
 
 import javax.net.ssl.SSLSocket;
 
@@ -118,34 +119,39 @@ public class MySQLIO
                         //continue fetching data
                         if (!isDBConnected)
                         {
+                            Log.d("MySQLIO", "DB Is Not Connected. Breaking MySQLIO");
                             break;
                         }
                         else {
                             int packetType = tempFullData[tempFullData.length - 1];
+                            Log.d("MySQLIO", "Packet Type: " + String.valueOf(packetType) + " at position: " + String.valueOf(tempFullData.length - 1));
                             Log.d("MySQIO", "Less than 1024 Bytes Returned. Packet Type at end of array (end of array would have to be an OK: " + packetType);
                             if (packetType == 0x00 || packetType == 0xfe)
                             {
+                                Log.d("MySQLIO", "Breaking MySQLIO due to OK packet at end of array");
                                 break;
                             }
                             packetType = tempFullData[tempFullData.length-1 - 8];
                             Log.d("MySQIO", "Less than 1024 bytes returned. Packet type -8 from the end of the array would need to be an EOF packet");
                             if (packetType == 0xfe || packetType == 0xff)
                             {
+                                Log.d("MySQLIO", "Breaking MySQLIO due to OK packet at end of array -8 bytes");
                                 break;
                             }
                             //The 4th byte can also contain the OK or EOF so check this as well
                             if (tempFullData[4] == 0x00 || tempFullData[4] == 0xfe || tempFullData[4] == 0xff)
                             {
+                                Log.d("MySQLIO", "Breaking MySQLIO due to OK packet at byte 4");
                                 break;
                             }
-                                Log.d("MySQIO", "Packet Type at -8 was: " + packetType + " so continuing fetching data");
+                            Log.d("MySQIO", "Packet Type at -8 was: " + packetType + " so continuing fetching data");
 
-                                if (expectedPayloadLength == (tempFullData.length - 4))
-                                {
-                                    break;
-                                }
+                            if (expectedPayloadLength == (tempFullData.length - 4))
+                            {
+                                Log.d("MySQLIO", "Breaking MySQLIO due to expected payload length");
+                                break;
                             }
-                        //If we get here continue fetching data
+                        }
 
                     }
                 }

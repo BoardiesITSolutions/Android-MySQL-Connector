@@ -218,6 +218,8 @@ public class Statement
                                     }
                                 }
                                 catch (final InvalidSQLPacketException e) {
+                                    Log.e("Statement", "Invalid SQL Packet Exception in Statement");
+                                    e.printStackTrace();
                                     if (mysqlConn.getReturnCallbackToMainThread()) {
                                         mysqlConn.getActivity().runOnUiThread(new Runnable() {
                                             @Override
@@ -263,6 +265,7 @@ public class Statement
                         }
                         catch (final MySQLConnException ex)
                         {
+                            ex.printStackTrace();
                             if (mysqlConn.getReturnCallbackToMainThread())
                             {
                                 mysqlConn.getActivity().runOnUiThread(new Runnable() {

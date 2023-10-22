@@ -7,16 +7,20 @@ buildscript {
         publishToMavenLocal = false
     }
 
+
+
     repositories {
         if (publishToMavenLocal)
         {
+            println("Top level build gradle. Using mavenLocal")
+            apply plugin: 'maven-publish'
             mavenLocal()
         }
         jcenter()
         google()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:4.2.2'
+        classpath 'com.android.tools.build:gradle:7.4.2'
         if (!publishToMavenLocal) {
             classpath 'com.github.dcendents:android-maven-gradle-plugin:1.5'
         }

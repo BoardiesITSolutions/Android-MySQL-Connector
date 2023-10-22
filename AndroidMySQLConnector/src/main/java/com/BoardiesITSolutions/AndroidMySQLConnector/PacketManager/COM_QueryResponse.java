@@ -110,34 +110,10 @@ public class COM_QueryResponse extends BasePacket
             {
                 break;
             }
+
             this.mysqlConn.getMysqlIO().shiftCurrentBytePosition(4);
 
-            //Check we don't have an error packet
-            if (Helpers.getMySQLPacketTypeFromIntWithoutShift(packetType) == Helpers.MYSQL_PACKET_TYPE.MYSQL_ERROR_PACKET)
-            {
-                try {
-                    MySQLErrorPacket errorPacket = new MySQLErrorPacket(this.mysqlConn);
-                    throw new MySQLException(errorPacket.getErrorMsg(), errorPacket.getErrorCode(), errorPacket.getSqlState());
-                }
-                catch (Exception ex)
-                {
-                    Log.e("COM_QueryResponse", ex.toString());
-                }
-                break;
-            }
-
-
-
-
             MySQLRow row = new MySQLRow();
-
-            /*if (Helpers.getMySQLPacketTypeFromIntWithoutShift(packetType) == Helpers.MYSQL_PACKET_TYPE.MYSQL_EOF_PACKET
-                || Helpers.getMySQLPacketTypeFromIntWithoutShift(packetType) == Helpers.MYSQL_PACKET_TYPE.MYSQL_OK_PACKET)
-            {
-                Log.d("COM_QueryResponse", "Got EOF or OK Packet. Breaking from loop");
-                //We've got an EOF packet so we're at the end or an OK packet so we've got everything we need
-                break;
-            }*/
 
             int currentColumn = 0;
             for (; currentColumn < numberOfFields; currentColumn++)
@@ -212,8 +188,6 @@ public class COM_QueryResponse extends BasePacket
             }
             timesProcessed++;
         }while(true);
-
-
     }
 
     public List<ColumnDefinition> getColumnDefinitions()

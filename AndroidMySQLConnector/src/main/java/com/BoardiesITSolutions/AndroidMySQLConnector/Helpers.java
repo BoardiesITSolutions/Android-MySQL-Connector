@@ -1,5 +1,7 @@
 package com.BoardiesITSolutions.AndroidMySQLConnector;
 
+import android.util.Log;
+
 import com.BoardiesITSolutions.AndroidMySQLConnector.Exceptions.MySQLConnException;
 import com.BoardiesITSolutions.AndroidMySQLConnector.Exceptions.MySQLException;
 
@@ -30,6 +32,7 @@ public class Helpers
         }
 
         int packetType = socketData[4] & 0xff;
+        Log.d("Helpers", "Get MySQL Packet Type. Packet Type: " + packetType + " Before Modding: " + socketData[4]);
         if ((packetType & 0xff) == 0xff)
         {
             return MYSQL_PACKET_TYPE.MYSQL_ERROR_PACKET;

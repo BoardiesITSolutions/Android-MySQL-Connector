@@ -45,7 +45,7 @@ public class MySQLErrorPacket extends BasePacket
         this.setPacketSequenceNumber((byte)this.mysqlConn.getMysqlIO().extractData(1));
 
 
-        if (Helpers.getMySQLPacketType(this.mysqlConn.getMysqlIO().getSocketByteArray()) != Helpers.MYSQL_PACKET_TYPE.MYSQL_ERROR_PACKET) {
+        if (Helpers.getMySQLPacketTypeFromIntWithoutShift(this.mysqlConn.getMysqlIO().readCurrentByteWithoutShift()) != Helpers.MYSQL_PACKET_TYPE.MYSQL_ERROR_PACKET) {
             throw new InvalidSQLPacketException("Error: Trying to process a MySQL Error Packet but we don't have the expected packet header for a MySQL Error Packet");
         }
 
