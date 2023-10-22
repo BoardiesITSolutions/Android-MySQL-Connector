@@ -2,9 +2,13 @@
 
 buildscript {
     repositories {
+        apply plugin: 'maven-publish'
         if (rootProject.ext.publishToMavenLocal) {
-            apply plugin: 'maven-publish'
             mavenLocal()
+        }
+        else
+        {
+            mavenCentral()
         }
     }
 }
@@ -23,7 +27,7 @@ else
 }
 
 archivesBaseName="AndroidMySQLConnector"
-version '0.49'
+version '0.52'
 group 'com.BoardiesITSolutions'
 
 
@@ -47,42 +51,50 @@ android {
     }
 
     println("Is publishToMavenLocal set? " + rootProject.ext.publishToMavenLocal)
-    if (rootProject.ext.publishToMavenLocal) {
-        android.libraryVariants
+    android.libraryVariants
 
-        project.afterEvaluate {
-            project.publishing {
-                publications {
-                    mavenJava(MavenPublication) {
-                        groupId 'com.BoardiesITSolutions'
-                        artifactId 'AndroidMySQLConnector'
-                        version '0.49'
-                        artifact("$buildDir/outputs/aar/AndroidMySQLConnector-release.aar")
-                    }
-                }
-                repositories {
-                    mavenLocal()
+    project.afterEvaluate {
+        project.publishing {
+            publications {
+                mavenJava(MavenPublication) {
+                    groupId 'com.BoardiesITSolutions'
+                    artifactId 'AndroidMySQLConnector'
+                    version '0.51'
+                    artifact("$buildDir/outputs/aar/AndroidMySQLConnector-release.aar")
                 }
             }
-        }
-
-        libraryVariants.all { variant ->
-            variant.outputs.all { output ->
-                def outputFile = output.outputFile
-                if (outputFile != null && outputFile.name.endsWith('.aar')) {
-                    def fileName = "${archivesBaseName}-${version}.aar"
-                    //def fileName = "${archivesBaseName}-debug.aar"
-                    //output.outputFile = new File(outputFile.parent, fileName)
-                    outputFileName = fileName
+            repositories {
+                if (rootProject.ext.publishToMavenLocal) {
+                    mavenLocal()
+                }
+                else {
+                    mavenCentral()
                 }
             }
         }
     }
 
+    libraryVariants.all { variant ->
+        variant.outputs.all { output ->
+            def outputFile = output.outputFile
+            if (outputFile != null && outputFile.name.endsWith('.aar')) {
+                def fileName = "${archivesBaseName}-${version}.aar"
+                //def fileName = "${archivesBaseName}-debug.aar"
+                //output.outputFile = new File(outputFile.parent, fileName)
+                outputFileName = fileName
+            }
+        }
+    }
+
+
     repositories {
         if (rootProject.ext.publishToMavenLocal)
         {
             mavenLocal()
+        }
+        else
+        {
+            mavenCentral()
         }
         jcenter()
         maven {

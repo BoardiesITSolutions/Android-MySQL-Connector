@@ -10,10 +10,10 @@ buildscript {
 
 
     repositories {
+        apply plugin: 'maven-publish'
         if (publishToMavenLocal)
         {
             println("Top level build gradle. Using mavenLocal")
-            apply plugin: 'maven-publish'
             mavenLocal()
         }
         jcenter()
