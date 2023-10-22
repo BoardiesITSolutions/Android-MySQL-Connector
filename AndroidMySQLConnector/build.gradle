@@ -3,22 +3,23 @@
 buildscript {
     repositories {
         if (rootProject.ext.publishToMavenLocal) {
-
+            apply plugin: 'maven-publish'
             mavenLocal()
         }
     }
 }
-apply plugin: 'maven-publish'
+
 apply plugin: 'com.android.library'
+apply plugin: 'maven-publish'
 if (rootProject.ext.publishToMavenLocal)
 {
     println("using maven local")
-    apply plugin: 'maven-publish'
+
 }
 else
 {
     println("Not using maven local")
-    apply plugin: 'com.github.dcendents.android-maven'
+    //apply plugin: 'com.github.dcendents.android-maven'
 }
 
 archivesBaseName="AndroidMySQLConnector"
